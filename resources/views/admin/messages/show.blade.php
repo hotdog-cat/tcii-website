@@ -1,0 +1,6 @@
+@extends('layouts.admin')
+@section('title', 'Message from '.$message->name)
+@section('content')
+<div class="page-heading"><div><p class="kicker">Contact Message</p><h1>{{ $message->subject ?: 'Website inquiry' }}</h1><p>Received {{ $message->created_at->format('F d, Y \a\t g:i A') }}</p></div><a href="{{ route('admin.messages.index') }}">← Back to inbox</a></div>
+<article class="panel message-card"><div class="message-meta"><div><span>From</span><strong>{{ $message->name }}</strong><a href="mailto:{{ $message->email }}">{{ $message->email }}</a></div><div><span>Phone</span><strong>{{ $message->phone ?: 'Not provided' }}</strong></div><div><span>Company</span><strong>{{ $message->company ?: 'Not provided' }}</strong></div></div><div class="message-body">{!! nl2br(e($message->message)) !!}</div><div class="form-actions"><form method="post" action="{{ route('admin.messages.destroy',$message) }}" onsubmit="return confirm('Delete this message?')">@csrf @method('DELETE')<button class="danger-btn">Delete Message</button></form><a class="primary-btn" href="mailto:{{ $message->email }}?subject={{ rawurlencode('Re: '.($message->subject ?: 'Your Techtonic inquiry')) }}">Reply by Email</a></div></article>
+@endsection
