@@ -86,8 +86,9 @@ const leaders = cmsTeam.length
       name: item.title,
       role: item.subtitle ?? "",
       initials: item.description || item.title.split(" ").slice(0, 2).map((word) => word[0]).join(""),
+      image: item.image,
     }))
-  : fallbackLeaders;
+  : fallbackLeaders.map((leader) => ({ ...leader, image: null }));
 const owners: [string, string][] = cmsTeam.length
   ? cmsTeam.filter((item) => item.description === "BOARD").map((item) => [item.title, item.subtitle ?? ""])
   : fallbackOwners.map((item) => [item[0], item[1]]);
@@ -364,7 +365,11 @@ export default function Home() {
           {leaders.map((leader, index) => (
             <article className="leader-card" key={leader.name}>
               <div className="leader-mark">
-                <span>{leader.initials}</span>
+                {leader.image ? (
+                  <img src={leader.image} alt={leader.name} loading="lazy" />
+                ) : (
+                  <span>{leader.initials}</span>
+                )}
                 <i>0{index + 1}</i>
               </div>
               <h3>{leader.name}</h3>

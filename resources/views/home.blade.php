@@ -72,7 +72,7 @@
 
     <section class="team-section" id="team">
         <div class="section-topline"><div><p class="eyebrow">Our Team</p><h2>Experienced people.<br>One concrete standard.</h2></div><p>Leadership, technical oversight, and operational discipline working together on every project.</p></div>
-        <div class="leader-grid">@foreach($leaders as $leader)<article class="leader-card"><div class="leader-mark"><span>{{ $leader->description ?: collect(explode(' ', $leader->title))->map(fn($p) => mb_substr($p,0,1))->take(2)->join('') }}</span><i>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</i></div><h3>{{ $leader->title }}</h3><p>{{ $leader->subtitle }}</p></article>@endforeach</div>
+        <div class="leader-grid">@foreach($leaders as $leader)<article class="leader-card"><div class="leader-mark">@if($leader->image_url)<img src="{{ $leader->image_url }}" alt="{{ $leader->title }}" loading="lazy">@else<span>{{ $leader->description ?: collect(explode(' ', $leader->title))->map(fn($p) => mb_substr($p,0,1))->take(2)->join('') }}</span>@endif<i>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</i></div><h3>{{ $leader->title }}</h3><p>{{ $leader->subtitle }}</p></article>@endforeach</div>
         @if($board->isNotEmpty())<div class="board-list"><p>Owners &amp; Board</p><div>@foreach($board as $member)<article><h3>{{ $member->title }}</h3><span>{{ $member->subtitle }}</span></article>@endforeach</div></div>@endif
     </section>
 

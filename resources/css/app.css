@@ -777,6 +777,14 @@ a {
   font-weight: 700;
 }
 
+.leader-mark img {
+  width: 112px;
+  height: 112px;
+  border: 1px solid rgba(8, 169, 208, 0.65);
+  object-fit: cover;
+  object-position: center top;
+}
+
 .leader-mark i {
   color: rgba(255, 255, 255, 0.3);
   font-size: 11px;
