@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ContactMessage;
 use App\Models\ContentItem;
+use App\Models\PageContent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,9 @@ class HomeController extends Controller
             'sort_order' => $item->sort_order,
         ])->values());
 
-        return view('react', compact('contentJson'));
+        $pageContent = PageContent::values();
+
+        return view('react', compact('contentJson', 'pageContent'));
     }
 
     public function contact(Request $request): RedirectResponse|JsonResponse
@@ -44,11 +47,12 @@ class HomeController extends Controller
         ]);
 
         ContactMessage::create($validated);
+        $successMessage = PageContent::values()['inquiry_success_message'];
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'Thank you. Your inquiry has been sent to our team.'], 201);
+            return response()->json(['message' => $successMessage], 201);
         }
 
-        return back()->with('success', 'Thank you. Your inquiry has been sent to our team.');
+        return back()->with('success', $successMessage);
     }
 }

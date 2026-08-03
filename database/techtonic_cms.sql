@@ -33,6 +33,16 @@ CREATE TABLE IF NOT EXISTS `content_items` (
   KEY `content_items_is_published_index` (`is_published`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `page_contents` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `key` varchar(80) NOT NULL,
+  `value` text NOT NULL,
+  `created_at` timestamp NULL,
+  `updated_at` timestamp NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `page_contents_key_unique` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `contact_messages` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(120) NOT NULL,

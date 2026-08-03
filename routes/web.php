@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\MessageController;
+use App\Http\Controllers\Admin\PageContentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,8 @@ Route::middleware('guest')->group(function () {
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('/page-content', [PageContentController::class, 'edit'])->name('page-content.edit');
+    Route::put('/page-content', [PageContentController::class, 'update'])->name('page-content.update');
     Route::resource('items', ItemController::class)->except('show');
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{message}', [MessageController::class, 'show'])->name('messages.show');

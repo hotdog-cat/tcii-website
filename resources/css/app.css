@@ -202,6 +202,7 @@ a {
   z-index: 3;
   display: block;
   width: clamp(180px, 18vw, 252px);
+  max-width: 44vw;
 }
 
 .brand img {
@@ -1177,6 +1178,7 @@ footer {
 .footer-brand {
   display: block;
   width: 205px;
+  max-width: 100%;
 }
 
 .footer-brand img {

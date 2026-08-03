@@ -12,15 +12,32 @@ type CmsItem = {
 declare global {
   interface Window {
     __TECHTONIC_CONTENT__?: Record<string, CmsItem[]>;
+    __TECHTONIC_PAGE_CONTENT__?: Record<string, string>;
   }
 }
 
 const cms = window.__TECHTONIC_CONTENT__ ?? {};
+const pageContent = window.__TECHTONIC_PAGE_CONTENT__ ?? {};
+
+const editable = (key: string, fallback: string) => pageContent[key] ?? fallback;
+const pixelSetting = (key: string, fallback: number) => {
+  const value = Number(editable(key, String(fallback)));
+  return Number.isFinite(value) ? Math.min(400, Math.max(100, value)) : fallback;
+};
+const headingLines = (value: string) =>
+  value.split(/\r?\n/).map((line, index) => (
+    <span key={`${line}-${index}`}>
+      {index > 0 && <br />}
+      {line}
+    </span>
+  ));
+const contentLines = (value: string) => value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+const phoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 
 const serviceLinks = [
-  { label: "Facilities", href: "#facilities" },
-  { label: "Equipment", href: "#equipment" },
-  { label: "Products", href: "#products" },
+  { label: editable("nav_facilities", "Facilities"), href: "#facilities" },
+  { label: editable("nav_equipment", "Equipment"), href: "#equipment" },
+  { label: editable("nav_products", "Products"), href: "#products" },
 ];
 
 const fallbackRegistry = [
@@ -112,6 +129,12 @@ export default function Home() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [formMessage, setFormMessage] = useState("");
+  const contactAddress = contentLines(editable("contact_address", "Purok Paho, Brgy. Felisa\nBacolod City, Negros Occidental\nPhilippines 6100"));
+  const contactTelephones = contentLines(editable("contact_telephones", "034-213-0490\n034-461-9194"));
+  const contactMobiles = contentLines(editable("contact_mobiles", "0998-476-2210\n0918-664-0085\n0936-923-3732"));
+  const contactEmail = editable("contact_email", "techtonicrmc@gmail.com");
+  const headerLogoWidth = pixelSetting("header_logo_width", 252);
+  const footerLogoWidth = pixelSetting("footer_logo_width", 205);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -173,11 +196,11 @@ export default function Home() {
         body: new FormData(form),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Please check your details and try again.");
+      if (!response.ok) throw new Error(data.message || editable("inquiry_error_message", "Unable to send your inquiry. Please check your details and try again."));
       form.reset();
       setFormMessage(data.message);
     } catch (error) {
-      setFormMessage(error instanceof Error ? error.message : "Unable to send your inquiry.");
+      setFormMessage(error instanceof Error ? error.message : editable("inquiry_error_message", "Unable to send your inquiry. Please check your details and try again."));
     } finally {
       setSending(false);
     }
@@ -186,8 +209,8 @@ export default function Home() {
   return (
     <main>
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
-        <a className="brand" href="#home" aria-label="Techtonic home">
-          <img src="/images/techtonic-logo-white.png" alt="Techtonic Concrete Industries Inc." />
+        <a className="brand" href="#home" aria-label="Techtonic home" style={{ width: `${headerLogoWidth}px` }}>
+          <img src={editable("header_logo_image", "/images/techtonic-logo-white.png")} alt="Techtonic Concrete Industries Inc." />
         </a>
 
         <button
@@ -210,13 +233,13 @@ export default function Home() {
           className={`main-nav ${menuOpen ? "is-open" : ""}`}
           aria-label="Primary navigation"
         >
-          <span className="mobile-menu-label">Navigation</span>
-          <a href="#about" onClick={closeMenus}>About Us</a>
-          <a href="#mission" onClick={closeMenus}>Mission &amp; Vision</a>
+          <span className="mobile-menu-label">{editable("navigation_label", "Navigation")}</span>
+          <a href="#about" onClick={closeMenus}>{editable("nav_about", "About Us")}</a>
+          <a href="#mission" onClick={closeMenus}>{editable("nav_mission", "Mission & Vision")}</a>
           {SHOW_BUSINESS_REGISTRY && (
-            <a href="#registry" onClick={closeMenus}>Business Registry</a>
+            <a href="#registry" onClick={closeMenus}>{editable("nav_registry", "Business Registry")}</a>
           )}
-          <a href="#team" onClick={closeMenus}>Our Team</a>
+          <a href="#team" onClick={closeMenus}>{editable("nav_team", "Our Team")}</a>
           <div className={`services-menu ${servicesOpen ? "is-open" : ""}`}>
             <button
               type="button"
@@ -224,7 +247,7 @@ export default function Home() {
               aria-haspopup="true"
               onClick={() => setServicesOpen((open) => !open)}
             >
-              Services <span className="chevron" aria-hidden="true" />
+              {editable("nav_services", "Services")} <span className="chevron" aria-hidden="true" />
             </button>
             <div className="services-dropdown">
               {serviceLinks.map((item) => (
@@ -235,34 +258,33 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <a className="nav-contact" href="#contact" onClick={closeMenus}>Contact Us</a>
+          <a className="nav-contact" href="#contact" onClick={closeMenus}>{editable("nav_contact", "Contact Us")}</a>
         </nav>
       </header>
 
       <section className="hero" id="home">
-        <div className="hero-media" aria-hidden="true" />
+        <div className="hero-media" style={{ backgroundImage: `url(${editable("hero_background_image", "/images/hero-night.webp")})` }} aria-hidden="true" />
         <div className="hero-shade" aria-hidden="true" />
         <div className="hero-content">
-          <p className="eyebrow">Built for what comes next</p>
-          <h1>Engineering Strength.<br />Delivering Certainty.</h1>
+          <p className="eyebrow">{editable("hero_eyebrow", "Built for what comes next")}</p>
+          <h1>{headingLines(editable("hero_heading", "Engineering Strength.\nDelivering Certainty."))}</h1>
           <p className="hero-copy">
-            Reliable ready-mixed concrete, engineered for enduring projects
-            across Bacolod City and Negros Occidental.
+            {editable("hero_copy", "Reliable ready-mixed concrete, engineered for enduring projects across Bacolod City and Negros Occidental.")}
           </p>
           <div className="hero-actions">
             <a className="button button-primary" href="#facilities">
-              Explore Our Services <span aria-hidden="true">→</span>
+              {editable("hero_primary_button", "Explore Our Services")} <span aria-hidden="true">→</span>
             </a>
-            <a className="text-link" href="#about">View Company Profile</a>
+            <a className="text-link" href="#about">{editable("hero_secondary_button", "View Company Profile")}</a>
           </div>
           <div className="trust-row" aria-label="Company strengths">
-            <span>Quality-Controlled</span>
-            <span>Reliable Delivery</span>
-            <span>Built to Specification</span>
+            <span>{editable("hero_trust_one", "Quality-Controlled")}</span>
+            <span>{editable("hero_trust_two", "Reliable Delivery")}</span>
+            <span>{editable("hero_trust_three", "Built to Specification")}</span>
           </div>
         </div>
         <a className="scroll-cue" href="#about" aria-label="Scroll to About Us">
-          <span>Discover</span>
+          <span>{editable("hero_scroll_label", "Discover")}</span>
           <i aria-hidden="true" />
         </a>
       </section>
@@ -270,52 +292,45 @@ export default function Home() {
       <section className="about-section" id="about">
         <div className="section-number">01</div>
         <div className="section-heading">
-          <p className="eyebrow">About Techtonic</p>
-          <h2>Concrete confidence,<br />from the ground up.</h2>
+          <p className="eyebrow">{editable("about_eyebrow", "About Techtonic")}</p>
+          <h2>{headingLines(editable("about_heading", "Concrete confidence,\nfrom the ground up."))}</h2>
         </div>
         <div className="about-copy">
           <p>
-            Established on September 3, 2020, Techtonic Concrete Industries Inc.
-            supplies ready-mixed concrete for public and private projects throughout
-            Bacolod City and Negros Occidental.
+            {editable("about_paragraph_one", "Established on September 3, 2020, Techtonic Concrete Industries Inc. supplies ready-mixed concrete for public and private projects throughout Bacolod City and Negros Occidental.")}
           </p>
           <p>
-            From roads and bridges to malls and buildings, our computerized wet-mix
-            batching plant and skilled team bring accuracy, consistency, and dependable
-            service to every pour.
+            {editable("about_paragraph_two", "From roads and bridges to malls and buildings, our computerized wet-mix batching plant and skilled team bring accuracy, consistency, and dependable service to every pour.")}
           </p>
           <div className="about-stats">
-            <div><strong>90</strong><span>cu. m. hourly plant capacity</span></div>
-            <div><strong>12</strong><span>transit mixers in the profile fleet</span></div>
-            <div><strong>2020</strong><span>year established</span></div>
+            <div><strong>{editable("about_stat_one_value", "90")}</strong><span>{editable("about_stat_one_label", "cu. m. hourly plant capacity")}</span></div>
+            <div><strong>{editable("about_stat_two_value", "12")}</strong><span>{editable("about_stat_two_label", "transit mixers in the profile fleet")}</span></div>
+            <div><strong>{editable("about_stat_three_value", "2020")}</strong><span>{editable("about_stat_three_label", "year established")}</span></div>
           </div>
         </div>
       </section>
 
       <section className="mission-section" id="mission">
         <div className="mission-intro">
-          <p className="eyebrow">Mission &amp; Vision</p>
-          <h2>Measured by quality.<br />Driven by service.</h2>
+          <p className="eyebrow">{editable("mission_eyebrow", "Mission & Vision")}</p>
+          <h2>{headingLines(editable("mission_heading", "Measured by quality.\nDriven by service."))}</h2>
           <p>
-            Every batch, delivery, and customer relationship is guided by a clear
-            standard: deliver dependable concrete with accuracy and care.
+            {editable("mission_intro", "Every batch, delivery, and customer relationship is guided by a clear standard: deliver dependable concrete with accuracy and care.")}
           </p>
         </div>
         <div className="mission-cards">
           <article>
-            <span>Our Mission</span>
-            <h3>Great service. Exceptional ready-mixed concrete.</h3>
+            <span>{editable("mission_card_label", "Our Mission")}</span>
+            <h3>{editable("mission_title", "Great service. Exceptional ready-mixed concrete.")}</h3>
             <p>
-              To provide our customers with excellent service and produce high-quality
-              ready-mixed concrete that meets their expectations.
+              {editable("mission_description", "To provide our customers with excellent service and produce high-quality ready-mixed concrete that meets their expectations.")}
             </p>
           </article>
           <article>
-            <span>Our Vision</span>
-            <h3>To lead through service, accuracy, and quality.</h3>
+            <span>{editable("vision_card_label", "Our Vision")}</span>
+            <h3>{editable("vision_title", "To lead through service, accuracy, and quality.")}</h3>
             <p>
-              To be the top supplier of ready-mixed concrete, recognized for dependable
-              service, precise production, and consistent quality.
+              {editable("vision_description", "To be the top supplier of ready-mixed concrete, recognized for dependable service, precise production, and consistent quality.")}
             </p>
           </article>
         </div>
@@ -325,12 +340,11 @@ export default function Home() {
         <section className="registry-section" id="registry">
           <div className="section-topline">
             <div>
-              <p className="eyebrow">Business Registry</p>
-              <h2>Built on verified standards.</h2>
+              <p className="eyebrow">{editable("registry_eyebrow", "Business Registry")}</p>
+              <h2>{headingLines(editable("registry_heading", "Built on verified standards."))}</h2>
             </div>
             <p>
-              Registered, accredited, and supported by documented quality and calibration
-              controls.
+              {editable("registry_intro", "Registered, accredited, and supported by documented quality and calibration controls.")}
             </p>
           </div>
           <div className="registry-grid">
@@ -353,12 +367,11 @@ export default function Home() {
       <section className="team-section" id="team">
         <div className="section-topline">
           <div>
-            <p className="eyebrow">Our Team</p>
-            <h2>Experienced people.<br />One concrete standard.</h2>
+            <p className="eyebrow">{editable("team_eyebrow", "Our Team")}</p>
+            <h2>{headingLines(editable("team_heading", "Experienced people.\nOne concrete standard."))}</h2>
           </div>
           <p>
-            Leadership, technical oversight, and operational discipline working
-            together on every project.
+            {editable("team_intro", "Leadership, technical oversight, and operational discipline working together on every project.")}
           </p>
         </div>
         <div className="leader-grid">
@@ -378,7 +391,7 @@ export default function Home() {
           ))}
         </div>
         <div className="board-list">
-          <p>Owners &amp; Board</p>
+          <p>{editable("team_board_label", "Owners & Board")}</p>
           <div>
             {owners.map(([name, role]) => (
               <article key={name}>
@@ -393,12 +406,11 @@ export default function Home() {
       <section className="showcase-section facilities-section" id="facilities">
         <div className="section-topline">
           <div>
-            <p className="eyebrow">Our Facilities</p>
-            <h2>Purpose-built for precision.</h2>
+            <p className="eyebrow">{editable("facilities_eyebrow", "Our Facilities")}</p>
+            <h2>{headingLines(editable("facilities_heading", "Purpose-built for precision."))}</h2>
           </div>
           <p>
-            A connected production environment designed for accurate batching,
-            controlled testing, and reliable supply.
+            {editable("facilities_intro", "A connected production environment designed for accurate batching, controlled testing, and reliable supply.")}
           </p>
         </div>
         <div className="showcase-grid">
@@ -418,12 +430,11 @@ export default function Home() {
       <section className="equipment-section" id="equipment">
         <div className="section-topline light">
           <div>
-            <p className="eyebrow">Our Equipment</p>
-            <h2>Capacity that keeps<br />projects moving.</h2>
+            <p className="eyebrow">{editable("equipment_eyebrow", "Our Equipment")}</p>
+            <h2>{headingLines(editable("equipment_heading", "Capacity that keeps\nprojects moving."))}</h2>
           </div>
           <p>
-            A coordinated fleet of transit mixers, pumps, and heavy equipment supports
-            concrete delivery from plant to placement.
+            {editable("equipment_intro", "A coordinated fleet of transit mixers, pumps, and heavy equipment supports concrete delivery from plant to placement.")}
           </p>
         </div>
         <div className="equipment-grid">
@@ -442,8 +453,8 @@ export default function Home() {
 
       <section className="products-section" id="products">
         <div className="products-heading">
-          <p className="eyebrow">Our Products</p>
-          <h2>Concrete designed around the demands of the job.</h2>
+          <p className="eyebrow">{editable("products_eyebrow", "Our Products")}</p>
+          <h2>{headingLines(editable("products_heading", "Concrete designed around the demands of the job."))}</h2>
         </div>
         <div className="product-list">
           {products.map((product, index) => (
@@ -457,19 +468,18 @@ export default function Home() {
           ))}
         </div>
         <a className="button button-primary product-cta" href="#contact">
-          Discuss Your Requirements <span aria-hidden="true">→</span>
+          {editable("products_button_label", "Discuss Your Requirements")} <span aria-hidden="true">→</span>
         </a>
       </section>
 
       <section className="projects-section" aria-labelledby="projects-title">
         <div className="section-topline">
           <div>
-            <p className="eyebrow">Selected Projects</p>
-            <h2 id="projects-title">Proof in every pour.</h2>
+            <p className="eyebrow">{editable("projects_eyebrow", "Selected Projects")}</p>
+            <h2 id="projects-title">{headingLines(editable("projects_heading", "Proof in every pour."))}</h2>
           </div>
           <p>
-            Real project work featured in the Techtonic company profile across Bacolod
-            City and Negros Occidental.
+            {editable("projects_intro", "Real project work featured in the Techtonic company profile across Bacolod City and Negros Occidental.")}
           </p>
         </div>
         <div className="project-grid">
@@ -487,36 +497,31 @@ export default function Home() {
 
       <section className="contact-section" id="contact">
         <div className="contact-main">
-          <p className="eyebrow">Contact Us</p>
-          <h2>Let&apos;s build something<br />that lasts.</h2>
+          <p className="eyebrow">{editable("contact_eyebrow", "Contact Us")}</p>
+          <h2>{headingLines(editable("contact_heading", "Let's build something\nthat lasts."))}</h2>
           <p>
-            Tell us about your concrete requirements, schedule, and project location.
-            Our team is ready to help.
+            {editable("contact_intro", "Tell us about your concrete requirements, schedule, and project location. Our team is ready to help.")}
           </p>
           <button className="button button-primary" type="button" onClick={() => setInquiryOpen(true)}>
-            Send an Inquiry <span aria-hidden="true">→</span>
+            {editable("contact_button_label", "Send an Inquiry")} <span aria-hidden="true">→</span>
           </button>
         </div>
         <div className="contact-details">
           <div>
-            <span>Office Address</span>
-            <p>Purok Paho, Brgy. Felisa<br />Bacolod City, Negros Occidental<br />Philippines 6100</p>
+            <span>{editable("contact_address_label", "Office Address")}</span>
+            <p>{contactAddress.map((line, index) => <span key={`${line}-${index}`}>{index > 0 && <br />}{line}</span>)}</p>
           </div>
           <div>
-            <span>Telephone</span>
-            <p><a href="tel:+63342130490">034-213-0490</a><br /><a href="tel:+63344619194">034-461-9194</a></p>
+            <span>{editable("contact_telephone_label", "Telephone")}</span>
+            <p>{contactTelephones.map((phone, index) => <span key={`${phone}-${index}`}>{index > 0 && <br />}<a href={phoneHref(phone)}>{phone}</a></span>)}</p>
           </div>
           <div>
-            <span>Mobile</span>
-            <p>
-              <a href="tel:+639984762210">0998-476-2210</a><br />
-              <a href="tel:+639186640085">0918-664-0085</a><br />
-              <a href="tel:+639369233732">0936-923-3732</a>
-            </p>
+            <span>{editable("contact_mobile_label", "Mobile")}</span>
+            <p>{contactMobiles.map((phone, index) => <span key={`${phone}-${index}`}>{index > 0 && <br />}<a href={phoneHref(phone)}>{phone}</a></span>)}</p>
           </div>
           <div>
-            <span>Email</span>
-            <p><a href="mailto:techtonicrmc@gmail.com">techtonicrmc@gmail.com</a></p>
+            <span>{editable("contact_email_label", "Email")}</span>
+            <p><a href={`mailto:${contactEmail}`}>{contactEmail}</a></p>
           </div>
         </div>
       </section>
@@ -526,22 +531,22 @@ export default function Home() {
           <button className="inquiry-backdrop" type="button" aria-label="Close inquiry form" onClick={() => setInquiryOpen(false)} />
           <div className="inquiry-panel">
             <button className="inquiry-close" type="button" aria-label="Close inquiry form" onClick={() => setInquiryOpen(false)}>×</button>
-            <p className="eyebrow">Project Inquiry</p>
-            <h2 id="inquiry-title">Tell us what<br />you&apos;re building.</h2>
+            <p className="eyebrow">{editable("inquiry_eyebrow", "Project Inquiry")}</p>
+            <h2 id="inquiry-title">{headingLines(editable("inquiry_heading", "Tell us what\nyou're building."))}</h2>
             <form onSubmit={submitInquiry}>
               <div className="inquiry-row">
-                <label>Name<input name="name" required maxLength={120} /></label>
-                <label>Email<input type="email" name="email" required maxLength={190} /></label>
+                <label>{editable("inquiry_name_label", "Name")}<input name="name" required maxLength={120} /></label>
+                <label>{editable("inquiry_email_label", "Email")}<input type="email" name="email" required maxLength={190} /></label>
               </div>
               <div className="inquiry-row">
-                <label>Phone<input name="phone" maxLength={40} /></label>
-                <label>Company<input name="company" maxLength={150} /></label>
+                <label>{editable("inquiry_phone_label", "Phone")}<input name="phone" maxLength={40} /></label>
+                <label>{editable("inquiry_company_label", "Company")}<input name="company" maxLength={150} /></label>
               </div>
-              <label>Subject<input name="subject" maxLength={190} /></label>
-              <label>Project requirements<textarea name="message" rows={5} required maxLength={5000} /></label>
+              <label>{editable("inquiry_subject_label", "Subject")}<input name="subject" maxLength={190} /></label>
+              <label>{editable("inquiry_message_label", "Project requirements")}<textarea name="message" rows={5} required maxLength={5000} /></label>
               {formMessage && <p className="inquiry-message" aria-live="polite">{formMessage}</p>}
               <button className="button button-primary" type="submit" disabled={sending}>
-                {sending ? "Sending..." : "Send Inquiry"} <span aria-hidden="true">→</span>
+                {sending ? editable("inquiry_sending_label", "Sending...") : editable("inquiry_submit_label", "Send Inquiry")} <span aria-hidden="true">→</span>
               </button>
             </form>
           </div>
@@ -550,36 +555,36 @@ export default function Home() {
 
       <footer>
         <div className="footer-intro">
-          <a className="footer-brand" href="#home" aria-label="Back to top">
-            <img src="/images/techtonic-logo-white.png" alt="Techtonic Concrete Industries Inc." />
+          <a className="footer-brand" href="#home" aria-label="Back to top" style={{ width: `${footerLogoWidth}px` }}>
+            <img src={editable("footer_logo_image", "/images/techtonic-logo-white.png")} alt="Techtonic Concrete Industries Inc." />
           </a>
-          <p>Reliable concrete. Built for what comes next.</p>
+          <p>{editable("footer_tagline", "Reliable concrete. Built for what comes next.")}</p>
         </div>
 
         <div className="footer-links">
-          <h2>Quick Links</h2>
+          <h2>{editable("footer_links_heading", "Quick Links")}</h2>
           <nav aria-label="Footer navigation">
-            <a href="#about">About Us</a>
-            <a href="#mission">Mission &amp; Vision</a>
-            {SHOW_BUSINESS_REGISTRY && <a href="#registry">Business Registry</a>}
-            <a href="#team">Our Team</a>
-            <a href="#facilities">Facilities</a>
-            <a href="#equipment">Equipment</a>
-            <a href="#products">Products</a>
-            <a href="#contact">Contact Us</a>
+            <a href="#about">{editable("nav_about", "About Us")}</a>
+            <a href="#mission">{editable("nav_mission", "Mission & Vision")}</a>
+            {SHOW_BUSINESS_REGISTRY && <a href="#registry">{editable("nav_registry", "Business Registry")}</a>}
+            <a href="#team">{editable("nav_team", "Our Team")}</a>
+            <a href="#facilities">{editable("nav_facilities", "Facilities")}</a>
+            <a href="#equipment">{editable("nav_equipment", "Equipment")}</a>
+            <a href="#products">{editable("nav_products", "Products")}</a>
+            <a href="#contact">{editable("nav_contact", "Contact Us")}</a>
           </nav>
         </div>
 
         <div className="footer-contact">
-          <h2>Get in Touch</h2>
-          <a href="mailto:techtonicrmc@gmail.com">techtonicrmc@gmail.com</a>
-          <a href="tel:+63342130490">034-213-0490</a>
-          <p>Purok Paho, Brgy. Felisa<br />Bacolod City, Negros Occidental</p>
+          <h2>{editable("footer_contact_heading", "Get in Touch")}</h2>
+          <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+          {contactTelephones[0] && <a href={phoneHref(contactTelephones[0])}>{contactTelephones[0]}</a>}
+          <p>{contactAddress.map((line, index) => <span key={`${line}-${index}`}>{index > 0 && <br />}{line}</span>)}</p>
         </div>
 
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} Techtonic Concrete Industries Inc.</span>
-          <a href="#home">Back to top ↑</a>
+          <span>© {new Date().getFullYear()} {editable("footer_company_name", "Techtonic Concrete Industries Inc.")}</span>
+          <a href="#home">{editable("footer_back_to_top", "Back to top")} ↑</a>
         </div>
       </footer>
     </main>

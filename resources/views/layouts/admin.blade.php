@@ -11,6 +11,7 @@
         <a class="admin-brand" href="{{ route('admin.dashboard') }}"><img src="{{ asset('images/techtonic-logo-white.png') }}" alt="Techtonic"><span>Content Management</span></a>
         <nav>
             <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
+            <a class="{{ request()->routeIs('admin.page-content.*') ? 'active' : '' }}" href="{{ route('admin.page-content.edit') }}">Page Content</a>
             @foreach(\App\Models\ContentItem::TYPES as $key => $label)
                 <a class="{{ request('type') === $key ? 'active' : '' }}" href="{{ route('admin.items.index', ['type' => $key]) }}">{{ $label }}</a>
             @endforeach

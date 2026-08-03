@@ -8,6 +8,7 @@
     <title>Techtonic Concrete Industries Inc.</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}">
     <script>window.__TECHTONIC_CONTENT__ = @json($contentJson);</script>
+    <script>window.__TECHTONIC_PAGE_CONTENT__ = @json($pageContent);</script>
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/main.tsx'])
 </head>

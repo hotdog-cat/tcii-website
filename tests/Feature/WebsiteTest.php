@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\PageContent;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class WebsiteTest extends TestCase
@@ -17,8 +20,8 @@ class WebsiteTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Engineering Strength.')
-            ->assertDontSee('Built on verified standards.');
+            ->assertSee('Concrete confidence')
+            ->assertDontSee('"registry":', false);
     }
 
     public function test_contact_form_stores_an_inquiry(): void
@@ -37,5 +40,88 @@ class WebsiteTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)->get('/admin')->assertOk();
+    }
+
+    public function test_admin_can_edit_fixed_page_content_and_contact_details(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $content = PageContent::DEFAULTS;
+        $content['about_heading'] = "Custom concrete heading\nfrom the admin.";
+        $content['vision_title'] = 'A newly edited vision.';
+        $content['hero_heading'] = "Custom hero heading\nfrom the admin.";
+        $content['team_intro'] = 'A custom team introduction.';
+        $content['inquiry_name_label'] = 'Your full name';
+        $content['footer_tagline'] = 'A custom footer tagline.';
+        $content['contact_address'] = "New Plant Road\nBacolod City";
+        $content['contact_telephones'] = "034-555-0100\n034-555-0101";
+        $content['contact_email'] = 'sales@example.com';
+
+        $this->actingAs($admin)
+            ->get('/admin/page-content')
+            ->assertOk()
+            ->assertSee('Content only')
+            ->assertSee('Statistic 1 value')
+            ->assertSee('Contact Details')
+            ->assertSee('Telephone numbers')
+            ->assertSee('Hero')
+            ->assertSee('Inquiry Form')
+            ->assertSee('Footer')
+            ->assertSee('Home Banner')
+            ->assertSee('Header Logo')
+            ->assertSee('Footer Logo')
+            ->assertDontSee('Add Item');
+
+        $this->actingAs($admin)
+            ->put('/admin/page-content', $content)
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('page_contents', [
+            'key' => 'about_heading',
+            'value' => "Custom concrete heading\nfrom the admin.",
+        ]);
+
+        $this->assertDatabaseHas('page_contents', [
+            'key' => 'contact_email',
+            'value' => 'sales@example.com',
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Custom concrete heading')
+            ->assertSee('Custom hero heading')
+            ->assertSee('A newly edited vision.')
+            ->assertSee('A custom team introduction.')
+            ->assertSee('Your full name')
+            ->assertSee('A custom footer tagline.')
+            ->assertSee('New Plant Road')
+            ->assertSee('034-555-0101')
+            ->assertSee('sales@example.com');
+    }
+
+    public function test_admin_can_upload_separate_home_banner_and_logos(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $content = PageContent::DEFAULTS;
+        $content['hero_background_upload'] = UploadedFile::fake()->image('home-banner.jpg', 1920, 1080);
+        $content['header_logo_upload'] = UploadedFile::fake()->image('header-logo.png', 640, 180);
+        $content['footer_logo_upload'] = UploadedFile::fake()->image('footer-logo.png', 640, 180);
+        $content['header_logo_width'] = '310';
+        $content['footer_logo_width'] = '240';
+
+        $this->actingAs($admin)
+            ->put('/admin/page-content', $content)
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        foreach (['hero_background_image', 'header_logo_image', 'footer_logo_image'] as $key) {
+            $value = PageContent::query()->where('key', $key)->value('value');
+            $this->assertStringStartsWith('/storage/page-content/', $value);
+            Storage::disk('public')->assertExists(str_replace('/storage/', '', $value));
+        }
+
+        $this->assertDatabaseHas('page_contents', ['key' => 'header_logo_width', 'value' => '310']);
+        $this->assertDatabaseHas('page_contents', ['key' => 'footer_logo_width', 'value' => '240']);
     }
 }

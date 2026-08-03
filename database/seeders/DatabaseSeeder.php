@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ContentItem;
+use App\Models\PageContent;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,10 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@company.com'],
             ['name' => 'Company Administrator', 'password' => Hash::make('password'), 'is_admin' => true]
         );
+
+        foreach (PageContent::DEFAULTS as $key => $value) {
+            PageContent::updateOrCreate(compact('key'), compact('value'));
+        }
 
         $items = [
             ['facility', 'Batching Plant', 'Computerized wet-mix production', null, 'images/facility-batching.webp', 1, true],
