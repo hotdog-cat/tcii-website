@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ContentItem;
 use App\Models\User;
 use App\Models\PageContent;
 use Database\Seeders\DatabaseSeeder;
@@ -33,6 +34,37 @@ class WebsiteTest extends TestCase
         ])->assertRedirect();
 
         $this->assertDatabaseHas('contact_messages', ['email' => 'client@example.com']);
+    }
+
+    public function test_public_homepage_includes_every_published_content_item_and_excludes_hidden_items(): void
+    {
+        foreach (array_keys(ContentItem::TYPES) as $type) {
+            for ($index = 1; $index <= 6; $index++) {
+                ContentItem::create([
+                    'type' => $type,
+                    'title' => "Published {$type} {$index}",
+                    'sort_order' => $index,
+                    'is_published' => true,
+                ]);
+            }
+
+            ContentItem::create([
+                'type' => $type,
+                'title' => "Hidden {$type}",
+                'sort_order' => 99,
+                'is_published' => false,
+            ]);
+        }
+
+        $response = $this->get('/')->assertOk();
+
+        foreach (array_keys(ContentItem::TYPES) as $type) {
+            for ($index = 1; $index <= 6; $index++) {
+                $response->assertSee("Published {$type} {$index}");
+            }
+
+            $response->assertDontSee("Hidden {$type}");
+        }
     }
 
     public function test_admin_can_open_dashboard(): void
@@ -69,7 +101,17 @@ class WebsiteTest extends TestCase
             ->assertSee('Home Banner')
             ->assertSee('Header Logo')
             ->assertSee('Footer Logo')
+            ->assertSee('>Page Content</a>', false)
+            ->assertDontSee('href="'.route('admin.page-content.edit', ['tab' => 'banner']).'"', false)
+            ->assertDontSee('href="'.route('admin.page-content.edit', ['tab' => 'header-logo']).'"', false)
+            ->assertDontSee('href="'.route('admin.page-content.edit', ['tab' => 'footer-logo']).'"', false)
             ->assertDontSee('Add Item');
+
+        $this->actingAs($admin)
+            ->get('/admin/page-content?tab=header-logo')
+            ->assertOk()
+            ->assertSee('aria-selected="true" data-content-tab="header-logo"', false)
+            ->assertSee('data-content-tab="footer-logo"', false);
 
         $this->actingAs($admin)
             ->put('/admin/page-content', $content)

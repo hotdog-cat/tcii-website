@@ -2,6 +2,7 @@
 @section('title', 'Page Content')
 @section('content')
 @php
+    $activeTab = in_array(request('tab'), ['text', 'banner', 'header-logo', 'footer-logo'], true) ? request('tab') : 'text';
     $field = fn (string $name, string $label, string $type = 'input', ?string $hint = null) => compact('name', 'label', 'type', 'hint');
     $sections = [
         ['id' => 'navigation', 'title' => 'Navigation', 'fields' => [
@@ -99,17 +100,16 @@
 </div>
 
 <div class="content-tabs" role="tablist" aria-label="Page content settings">
-    <button class="active" type="button" role="tab" aria-selected="true" data-content-tab="text">Page Text</button>
-    <button type="button" role="tab" aria-selected="false" data-content-tab="banner">Home Banner</button>
-    <button type="button" role="tab" aria-selected="false" data-content-tab="header-logo">Header Logo</button>
-    <button type="button" role="tab" aria-selected="false" data-content-tab="footer-logo">Footer Logo</button>
+    @foreach(['text' => 'Page Text', 'banner' => 'Home Banner', 'header-logo' => 'Header Logo', 'footer-logo' => 'Footer Logo'] as $tab => $label)
+        <button @class(['active' => $activeTab === $tab]) type="button" role="tab" aria-selected="{{ $activeTab === $tab ? 'true' : 'false' }}" data-content-tab="{{ $tab }}">{{ $label }}</button>
+    @endforeach
 </div>
 
 <form class="page-content-form" method="post" enctype="multipart/form-data" action="{{ route('admin.page-content.update') }}">
     @csrf
     @method('PUT')
 
-    <div class="content-tab-panel active" role="tabpanel" data-content-panel="text">
+    <div @class(['content-tab-panel', 'active' => $activeTab === 'text']) role="tabpanel" data-content-panel="text" @if($activeTab !== 'text') hidden @endif>
         <nav class="content-jump-links" aria-label="Page text sections">
             @foreach($sections as $section)<a href="#{{ $section['id'] }}">{{ $section['title'] }}</a>@endforeach
         </nav>
@@ -147,7 +147,7 @@
         ['tab' => 'header-logo', 'title' => 'Header Logo', 'description' => 'The logo displayed in the main website header.', 'key' => 'header_logo_image', 'upload' => 'header_logo_upload', 'recommendation' => 'Recommended: transparent PNG with a wide logo layout.', 'class' => 'logo-preview', 'size_key' => 'header_logo_width'],
         ['tab' => 'footer-logo', 'title' => 'Footer Logo', 'description' => 'The logo displayed in the website footer.', 'key' => 'footer_logo_image', 'upload' => 'footer_logo_upload', 'recommendation' => 'Recommended: transparent PNG that remains legible on a dark background.', 'class' => 'logo-preview', 'size_key' => 'footer_logo_width'],
     ] as $media)
-        <div class="content-tab-panel" role="tabpanel" data-content-panel="{{ $media['tab'] }}" hidden>
+        <div @class(['content-tab-panel', 'active' => $activeTab === $media['tab']]) role="tabpanel" data-content-panel="{{ $media['tab'] }}" @if($activeTab !== $media['tab']) hidden @endif>
             <section class="panel media-settings-panel">
                 <div class="panel-title"><div><p class="kicker">Website Media</p><h2>{{ $media['title'] }}</h2></div></div>
                 <div class="media-settings-grid">
@@ -188,6 +188,10 @@ document.querySelectorAll('[data-content-tab]').forEach(button => button.addEven
         panel.classList.toggle('active', active);
         panel.hidden = !active;
     });
+    const url = new URL(window.location.href);
+    if (button.dataset.contentTab === 'text') url.searchParams.delete('tab');
+    else url.searchParams.set('tab', button.dataset.contentTab);
+    window.history.replaceState({}, '', url);
 }));
 document.querySelectorAll('[data-logo-size-control]').forEach(control => {
     const range = control.querySelector('[data-logo-size-range]');

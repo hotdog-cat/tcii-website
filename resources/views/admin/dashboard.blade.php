@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-heading"><div><p class="kicker">Overview</p><h1>Website dashboard</h1><p>Manage public content and review customer inquiries.</p></div></div>
 <div class="stat-grid">
-    <a class="stat-card accent" href="{{ route('admin.page-content.edit') }}"><span>Page Content</span><strong>3</strong><small>Edit fixed sections →</small></a>
+    <a class="stat-card accent" href="{{ route('admin.page-content.edit', ['tab' => 'text']) }}"><span>Page Content</span><strong>4</strong><small>Edit text and media →</small></a>
     @foreach(\App\Models\ContentItem::TYPES as $key => $label)
     <a class="stat-card" href="{{ route('admin.items.index', ['type' => $key]) }}"><span>{{ $label }}</span><strong>{{ $itemCounts[$key] ?? 0 }}</strong><small>Manage content →</small></a>
     @endforeach

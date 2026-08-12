@@ -9,6 +9,31 @@ type CmsItem = {
   sort_order: number;
 };
 
+type LightboxImage = {
+  src: string;
+  alt: string;
+  caption: string;
+};
+
+type ExpandableImageProps = LightboxImage & {
+  onOpen: (image: LightboxImage) => void;
+};
+
+function ExpandableImage({ src, alt, caption, onOpen }: ExpandableImageProps) {
+  if (!src) return null;
+
+  return (
+    <button
+      className="expandable-image"
+      type="button"
+      aria-label={`Expand image: ${caption}`}
+      onClick={() => onOpen({ src, alt, caption })}
+    >
+      <img src={src} alt={alt} loading="lazy" />
+    </button>
+  );
+}
+
 declare global {
   interface Window {
     __TECHTONIC_CONTENT__?: Record<string, CmsItem[]>;
@@ -40,56 +65,6 @@ const serviceLinks = [
   { label: editable("nav_products", "Products"), href: "#products" },
 ];
 
-const fallbackRegistry = [
-  { title: "SEC Registration", note: "Certificate of Incorporation", image: "/images/registry-sec.webp" },
-  { title: "BIR Registration", note: "Registered business entity", image: "/images/registry-bir.webp" },
-  { title: "Laboratory Accreditation", note: "Independent testing recognition", image: "/images/registry-accreditation.webp" },
-  { title: "Calibration Certificates", note: "Verified batching accuracy", image: "/images/registry-calibration.webp" },
-];
-
-const fallbackLeaders = [
-  { name: "Francis Victor R. Lamata", role: "CEO / President", initials: "FL" },
-  { name: "Renand T. Yutis", role: "General Manager", initials: "RY" },
-  { name: "Herbert A. Capangyarihan", role: "Batching Plant Manager", initials: "HC" },
-  { name: "Ismael P. Fuentes", role: "QC Supervisor", initials: "IF" },
-];
-
-const fallbackOwners = [
-  ["Angelo Gabriel R. Lamata", "Corporate Secretary"],
-  ["Jose Nilbert R. Lamata", "Treasurer"],
-  ["Inna Concepcion R. Lamata", "Board of Director"],
-  ["Adrian Joshua R. Lamata", "Board of Director"],
-  ["Fatima Trisha R. Lamata", "Board of Director"],
-  ["Wynona Daniella R. Lamata", "Board of Director"],
-];
-
-const fallbackFacilities = [
-  { name: "Batching Plant", image: "/images/facility-batching.webp", detail: "Computerized wet-mix production" },
-  { name: "Control Room", image: "/images/facility-control.webp", detail: "Accurate and monitored batching" },
-  { name: "Laboratory", image: "/images/facility-laboratory.webp", detail: "On-site quality control" },
-  { name: "Cement Warehouse", image: "/images/facility-warehouse.webp", detail: "Organized materials storage" },
-];
-
-const fallbackEquipment = [
-  { name: "Transit Mixer Fleet", image: "/images/equipment-mixer.webp", detail: "6 and 10 cu. m. units" },
-  { name: "Concrete Pumps", image: "/images/equipment-pump.webp", detail: "Truck-mounted placement reach" },
-  { name: "Payloader", image: "/images/equipment-loader.webp", detail: "Reliable yard operations" },
-  { name: "Heavy Equipment", image: "/images/equipment-fleet.webp", detail: "Project-ready support fleet" },
-];
-
-const fallbackProjects = [
-  { name: "SMDC - Smile Residences", image: "/images/project-smile.webp", place: "Bacolod City" },
-  { name: "Citadines Hotel", image: "/images/project-citadines.webp", place: "Bacolod City" },
-  { name: "J. Qua Construction", image: "/images/project-jqua.webp", place: "Negros Occidental" },
-  { name: "URC", image: "/images/project-urc.webp", place: "Kabankalan" },
-];
-
-const fallbackProducts = [
-  { title: "Quality Ready-Mixed Concrete", description: "Consistent concrete supply for roads, bridges, malls, buildings, and other developments." },
-  { title: "Controlled Mix Production", description: "Computerized wet-mix batching supports repeatable proportions, reliable output, and specification accuracy." },
-  { title: "High-Volume Project Supply", description: "Up to 90 cubic meters per hour of plant capacity, backed by a coordinated mixer and pump fleet." },
-];
-
 const registryItems = (cms.registry ?? []).map((item) => ({
   title: item.title,
   note: item.subtitle ?? "",
@@ -98,35 +73,26 @@ const registryItems = (cms.registry ?? []).map((item) => ({
 const SHOW_BUSINESS_REGISTRY = registryItems.length > 0;
 
 const cmsTeam = cms.team ?? [];
-const leaders = cmsTeam.length
-  ? cmsTeam.filter((item) => item.description !== "BOARD").slice(0, 4).map((item) => ({
-      name: item.title,
-      role: item.subtitle ?? "",
-      initials: item.description || item.title.split(" ").slice(0, 2).map((word) => word[0]).join(""),
-      image: item.image,
-    }))
-  : fallbackLeaders.map((leader) => ({ ...leader, image: null }));
-const owners: [string, string][] = cmsTeam.length
-  ? cmsTeam.filter((item) => item.description === "BOARD").map((item) => [item.title, item.subtitle ?? ""])
-  : fallbackOwners.map((item) => [item[0], item[1]]);
-const facilities = (cms.facility ?? []).length
-  ? cms.facility.map((item) => ({ name: item.title, image: item.image ?? "", detail: item.subtitle ?? "" }))
-  : fallbackFacilities;
-const equipment = (cms.equipment ?? []).length
-  ? cms.equipment.map((item) => ({ name: item.title, image: item.image ?? "", detail: item.subtitle ?? "" }))
-  : fallbackEquipment;
-const projects = (cms.project ?? []).length
-  ? cms.project.map((item) => ({ name: item.title, image: item.image ?? "", place: item.subtitle ?? "" }))
-  : fallbackProjects;
-const products = (cms.product ?? []).length
-  ? cms.product.map((item) => ({ title: item.title, description: item.description ?? "" }))
-  : fallbackProducts;
+const leaders = cmsTeam.filter((item) => item.description !== "BOARD").map((item) => ({
+  name: item.title,
+  role: item.subtitle ?? "",
+  initials: item.description || item.title.split(" ").slice(0, 2).map((word) => word[0]).join(""),
+  image: item.image,
+}));
+const owners: [string, string][] = cmsTeam
+  .filter((item) => item.description === "BOARD")
+  .map((item) => [item.title, item.subtitle ?? ""]);
+const facilities = (cms.facility ?? []).map((item) => ({ name: item.title, image: item.image ?? "", detail: item.subtitle ?? "" }));
+const equipment = (cms.equipment ?? []).map((item) => ({ name: item.title, image: item.image ?? "", detail: item.subtitle ?? "" }));
+const projects = (cms.project ?? []).map((item) => ({ name: item.title, image: item.image ?? "", place: item.subtitle ?? "" }));
+const products = (cms.product ?? []).map((item) => ({ title: item.title, description: item.description ?? "" }));
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<LightboxImage | null>(null);
   const [sending, setSending] = useState(false);
   const [formMessage, setFormMessage] = useState("");
   const contactAddress = contentLines(editable("contact_address", "Purok Paho, Brgy. Felisa\nBacolod City, Negros Occidental\nPhilippines 6100"));
@@ -176,6 +142,23 @@ export default function Home() {
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [inquiryOpen]);
+
+  useEffect(() => {
+    if (!lightboxImage) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLightboxImage(null);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [lightboxImage]);
 
   const closeMenus = () => {
     setMenuOpen(false);
@@ -290,7 +273,6 @@ export default function Home() {
       </section>
 
       <section className="about-section" id="about">
-        <div className="section-number">01</div>
         <div className="section-heading">
           <p className="eyebrow">{editable("about_eyebrow", "About Techtonic")}</p>
           <h2>{headingLines(editable("about_heading", "Concrete confidence,\nfrom the ground up."))}</h2>
@@ -351,7 +333,12 @@ export default function Home() {
             {registryItems.map((item, index) => (
               <article key={item.title} className="registry-card">
                 <div className="registry-image">
-                  <img src={item.image} alt={`${item.title} document`} loading="lazy" />
+                  <ExpandableImage
+                    src={item.image}
+                    alt={`${item.title} document`}
+                    caption={item.title}
+                    onOpen={setLightboxImage}
+                  />
                 </div>
                 <div>
                   <span>0{index + 1}</span>
@@ -379,7 +366,12 @@ export default function Home() {
             <article className="leader-card" key={leader.name}>
               <div className="leader-mark">
                 {leader.image ? (
-                  <img src={leader.image} alt={leader.name} loading="lazy" />
+                  <ExpandableImage
+                    src={leader.image}
+                    alt={leader.name}
+                    caption={leader.name}
+                    onOpen={setLightboxImage}
+                  />
                 ) : (
                   <span>{leader.initials}</span>
                 )}
@@ -416,7 +408,12 @@ export default function Home() {
         <div className="showcase-grid">
           {facilities.map((item, index) => (
             <article className={`showcase-card showcase-${index + 1}`} key={item.name}>
-              <img src={item.image} alt={item.name} loading="lazy" />
+              <ExpandableImage
+                src={item.image}
+                alt={item.name}
+                caption={item.name}
+                onOpen={setLightboxImage}
+              />
               <div>
                 <span>0{index + 1}</span>
                 <h3>{item.name}</h3>
@@ -441,7 +438,12 @@ export default function Home() {
           {equipment.map((item, index) => (
             <article key={item.name}>
               <div className="equipment-image">
-                <img src={item.image} alt={item.name} loading="lazy" />
+                <ExpandableImage
+                  src={item.image}
+                  alt={item.name}
+                  caption={item.name}
+                  onOpen={setLightboxImage}
+                />
                 <span>0{index + 1}</span>
               </div>
               <h3>{item.name}</h3>
@@ -485,7 +487,12 @@ export default function Home() {
         <div className="project-grid">
           {projects.map((project) => (
             <article key={project.name}>
-              <img src={project.image} alt={project.name} loading="lazy" />
+              <ExpandableImage
+                src={project.image}
+                alt={project.name}
+                caption={project.name}
+                onOpen={setLightboxImage}
+              />
               <div>
                 <h3>{project.name}</h3>
                 <span>{project.place}</span>
@@ -550,6 +557,29 @@ export default function Home() {
               </button>
             </form>
           </div>
+        </div>
+      )}
+
+      {lightboxImage && (
+        <div className="image-lightbox" role="dialog" aria-modal="true" aria-label={`Expanded image: ${lightboxImage.caption}`}>
+          <button
+            className="image-lightbox-backdrop"
+            type="button"
+            aria-label="Close expanded image"
+            onClick={() => setLightboxImage(null)}
+          />
+          <figure className="image-lightbox-content">
+            <button
+              className="image-lightbox-close"
+              type="button"
+              aria-label="Close expanded image"
+              onClick={() => setLightboxImage(null)}
+            >
+              &times;
+            </button>
+            <img src={lightboxImage.src} alt={lightboxImage.alt} />
+            <figcaption>{lightboxImage.caption}</figcaption>
+          </figure>
         </div>
       )}
 

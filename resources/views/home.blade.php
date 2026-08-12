@@ -46,7 +46,6 @@
     </section>
 
     <section class="about-section" id="about">
-        <div class="section-number">01</div>
         <div class="section-heading"><p class="eyebrow">About Techtonic</p><h2>Concrete confidence,<br>from the ground up.</h2></div>
         <div class="about-copy">
             <p>Established on September 3, 2020, Techtonic Concrete Industries Inc. supplies ready-mixed concrete for public and private projects throughout Bacolod City and Negros Occidental.</p>

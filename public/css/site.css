@@ -458,18 +458,16 @@ a {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.section-number {
-  color: rgba(255, 255, 255, 0.24);
-  font-size: 13px;
-  letter-spacing: 0.2em;
-}
-
 .section-heading h2 {
   margin: 0;
   max-width: 620px;
   font-size: clamp(42px, 5vw, 76px);
   line-height: 1.02;
   letter-spacing: -0.045em;
+}
+
+.about-section > .section-heading {
+  grid-column: 2;
 }
 
 .about-copy > p {
@@ -1473,6 +1471,11 @@ footer {
     grid-template-columns: 1fr;
     gap: 28px;
     padding: 78px 22px;
+  }
+
+
+  .about-section > .section-heading {
+    grid-column: auto;
   }
 
   .about-stats {
