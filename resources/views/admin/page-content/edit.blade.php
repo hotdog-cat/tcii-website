@@ -157,6 +157,14 @@
                         <p>{{ $media['description'] }}</p>
                         <label>Select a new image<input type="file" name="{{ $media['upload'] }}" accept="image/png,image/jpeg,image/webp,image/gif"></label>
                         <small>{{ $media['recommendation'] }}</small>
+                        <button
+                            class="danger-btn remove-image-btn"
+                            type="submit"
+                            name="remove_media"
+                            value="{{ $media['key'] }}"
+                            formnovalidate
+                            onclick="return confirm('Remove this image and restore the default?')"
+                        >Remove Image</button>
                         @if($media['size_key'])
                             <div class="logo-size-control" data-logo-size-control>
                                 <div><strong>Logo width</strong><output data-logo-size-output>{{ old($media['size_key'], $content[$media['size_key']]) }} px</output></div>

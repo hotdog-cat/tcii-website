@@ -9,7 +9,12 @@
         <label class="wide">Title<input name="title" maxlength="190" value="{{ old('title',$item->title) }}" required></label>
         <label class="wide">Subtitle / role / location<input name="subtitle" maxlength="190" value="{{ old('subtitle',$item->subtitle) }}"></label>
         <label class="wide">Description<textarea name="description" rows="6">{{ old('description',$item->description) }}</textarea><small>For team board members, use <b>BOARD</b> in the description to place them in Owners &amp; Board.</small></label>
-        <label class="wide">Image<input type="file" name="image" accept=".jpg,.jpeg,.png,.webp">@if($item->image_url)<span class="current-image"><img src="{{ $item->image_url }}" alt="">Current image</span>@endif</label>
+        <div class="wide image-field">
+            <label>Image<input type="file" name="image" accept=".jpg,.jpeg,.png,.webp"></label>
+            @if($item->image_url)
+                <span class="current-image"><img src="{{ $item->image_url }}" alt="">Current image <button class="danger-btn remove-image-btn" type="submit" name="remove_image" value="1" formnovalidate onclick="return confirm('Remove this image?')">Remove Image</button></span>
+            @endif
+        </div>
         <label class="check wide"><input type="checkbox" name="is_published" value="1" @checked(old('is_published',$item->is_published ?? true))> Publish this item on the public website</label>
     </div>
     <div class="form-actions"><a href="{{ route('admin.items.index', ['type'=>$item->type]) }}">Cancel</a><button class="primary-btn" type="submit">Save Content</button></div>

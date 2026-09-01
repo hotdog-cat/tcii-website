@@ -166,4 +166,48 @@ class WebsiteTest extends TestCase
         $this->assertDatabaseHas('page_contents', ['key' => 'header_logo_width', 'value' => '310']);
         $this->assertDatabaseHas('page_contents', ['key' => 'footer_logo_width', 'value' => '240']);
     }
+
+    public function test_admin_can_remove_page_media_and_restore_default(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('page-content/custom-banner.jpg', 'test');
+        $admin = User::factory()->create(['is_admin' => true]);
+        PageContent::create([
+            'key' => 'hero_background_image',
+            'value' => '/storage/page-content/custom-banner.jpg',
+        ]);
+
+        $this->actingAs($admin)
+            ->put('/admin/page-content', ['remove_media' => 'hero_background_image'])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('page_contents', [
+            'key' => 'hero_background_image',
+            'value' => PageContent::DEFAULTS['hero_background_image'],
+        ]);
+        Storage::disk('public')->assertMissing('page-content/custom-banner.jpg');
+    }
+
+    public function test_admin_can_remove_content_item_image(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('content/custom-image.jpg', 'test');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $item = ContentItem::create([
+            'type' => 'facility',
+            'title' => 'Custom Facility',
+            'image_path' => 'content/custom-image.jpg',
+            'sort_order' => 1,
+            'is_published' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.items.update', $item), ['remove_image' => '1'])
+            ->assertRedirect(route('admin.items.edit', $item))
+            ->assertSessionHas('success');
+
+        $this->assertNull($item->fresh()->image_path);
+        Storage::disk('public')->assertMissing('content/custom-image.jpg');
+    }
 }

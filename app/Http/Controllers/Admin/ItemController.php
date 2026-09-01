@@ -43,9 +43,16 @@ class ItemController extends Controller
 
     public function update(Request $request, ContentItem $item): RedirectResponse
     {
+        if ($request->boolean('remove_image')) {
+            $this->deleteStoredImage($item);
+            $item->update(['image_path' => null]);
+
+            return redirect()->route('admin.items.edit', $item)->with('success', 'Image removed.');
+        }
+
         $data = $this->validated($request);
         if ($request->hasFile('image')) {
-            if ($item->image_path && !str_starts_with($item->image_path, 'images/')) Storage::disk('public')->delete($item->image_path);
+            $this->deleteStoredImage($item);
             $data['image_path'] = $request->file('image')->store('content', 'public');
         }
         $item->update($data);
@@ -54,7 +61,7 @@ class ItemController extends Controller
 
     public function destroy(ContentItem $item): RedirectResponse
     {
-        if ($item->image_path && !str_starts_with($item->image_path, 'images/')) Storage::disk('public')->delete($item->image_path);
+        $this->deleteStoredImage($item);
         $type = $item->type;
         $item->delete();
         return redirect()->route('admin.items.index', ['type' => $type])->with('success', 'Content item deleted.');
@@ -74,5 +81,12 @@ class ItemController extends Controller
         $data['is_published'] = $request->boolean('is_published');
         unset($data['image']);
         return $data;
+    }
+
+    private function deleteStoredImage(ContentItem $item): void
+    {
+        if ($item->image_path && ! str_starts_with($item->image_path, 'images/')) {
+            Storage::disk('public')->delete($item->image_path);
+        }
     }
 }

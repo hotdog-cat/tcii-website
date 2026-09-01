@@ -19,6 +19,21 @@ class PageContentController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        if ($request->filled('remove_media')) {
+            $key = $request->string('remove_media')->toString();
+
+            if (! in_array($key, ['hero_background_image', 'header_logo_image', 'footer_logo_image'], true)) {
+                abort(404);
+            }
+
+            $currentValue = PageContent::values()[$key] ?? null;
+            $this->deleteStoredMedia($currentValue);
+
+            PageContent::updateOrCreate(['key' => $key], ['value' => PageContent::DEFAULTS[$key]]);
+
+            return back()->with('success', 'Image removed and default restored.');
+        }
+
         $rules = [];
         $longFieldFragments = ['paragraph', 'description', 'intro', 'copy', 'address', 'telephones', 'mobiles'];
 
@@ -45,6 +60,7 @@ class PageContentController extends Controller
             'footer_logo_upload' => 'footer_logo_image',
         ] as $uploadKey => $contentKey) {
             if ($request->hasFile($uploadKey)) {
+                $this->deleteStoredMedia(PageContent::values()[$contentKey] ?? null);
                 $storedPath = $request->file($uploadKey)->store('page-content', 'public');
                 $contentValues[$contentKey] = Storage::disk('public')->url($storedPath);
             }
@@ -57,5 +73,14 @@ class PageContentController extends Controller
         });
 
         return back()->with('success', 'Page content updated.');
+    }
+
+    private function deleteStoredMedia(?string $value): void
+    {
+        if (! $value || ! str_starts_with($value, '/storage/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(str_replace('/storage/', '', $value));
     }
 }
