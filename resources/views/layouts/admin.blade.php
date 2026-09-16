@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin') | Techtonic CMS</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=2">
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 <body>

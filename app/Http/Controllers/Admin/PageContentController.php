@@ -47,9 +47,9 @@ class PageContentController extends Controller
         $rules['contact_email'][] = 'email';
         $rules['header_logo_width'] = ['required', 'integer', 'min:100', 'max:400'];
         $rules['footer_logo_width'] = ['required', 'integer', 'min:100', 'max:400'];
-        $rules['hero_background_upload'] = ['nullable', 'image', 'max:8192'];
-        $rules['header_logo_upload'] = ['nullable', 'image', 'max:4096'];
-        $rules['footer_logo_upload'] = ['nullable', 'image', 'max:4096'];
+        $rules['hero_background_upload'] = ['nullable', 'image', 'max:10240'];
+        $rules['header_logo_upload'] = ['nullable', 'image', 'max:10240'];
+        $rules['footer_logo_upload'] = ['nullable', 'image', 'max:10240'];
 
         $validated = $request->validate($rules);
         $contentValues = array_intersect_key($validated, PageContent::DEFAULTS);

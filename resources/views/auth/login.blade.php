@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Admin Login | Techtonic</title><link rel="stylesheet" href="{{ asset('css/admin.css') }}"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Admin Login | Techtonic</title><link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=2"><link rel="stylesheet" href="{{ asset('css/admin.css') }}"></head>
 <body class="login-page">
 <main class="login-card">
     <img src="{{ asset('images/techtonic-logo.png') }}" alt="Techtonic Concrete Industries Inc.">

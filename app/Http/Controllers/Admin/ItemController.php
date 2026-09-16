@@ -74,7 +74,7 @@ class ItemController extends Controller
             'title' => ['required', 'string', 'max:190'],
             'subtitle' => ['nullable', 'string', 'max:190'],
             'description' => ['nullable', 'string', 'max:3000'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
             'is_published' => ['nullable', 'boolean'],
         ]);
