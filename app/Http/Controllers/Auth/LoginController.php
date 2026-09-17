@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,16 +29,20 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        if (!$request->user()->is_admin) {
+        if (!$request->user()->hasAdminAccess()) {
             Auth::logout();
-            return back()->withErrors(['email' => 'This account does not have administrator access.']);
+            return back()->withErrors(['email' => 'This account does not have CMS access.']);
         }
+
+        ActivityLog::record('auth.login', 'Signed in to the CMS.');
 
         return redirect()->intended(route('admin.dashboard'));
     }
 
     public function destroy(Request $request): RedirectResponse
     {
+        ActivityLog::record('auth.logout', 'Signed out of the CMS.');
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

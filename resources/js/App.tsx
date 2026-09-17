@@ -58,19 +58,32 @@ const headingLines = (value: string) =>
   ));
 const contentLines = (value: string) => value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 const phoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+const isSectionPublished = (section: string) => editable(`section_${section}_published`, "1") !== "0";
+const sectionPublished = {
+  about: isSectionPublished("about"),
+  mission: isSectionPublished("mission"),
+  registry: isSectionPublished("registry"),
+  team: isSectionPublished("team"),
+  facilities: isSectionPublished("facilities"),
+  equipment: isSectionPublished("equipment"),
+  products: isSectionPublished("products"),
+  projects: isSectionPublished("projects"),
+  contact: isSectionPublished("contact"),
+};
 
 const serviceLinks = [
-  { label: editable("nav_facilities", "Facilities"), href: "#facilities" },
-  { label: editable("nav_equipment", "Equipment"), href: "#equipment" },
-  { label: editable("nav_products", "Products"), href: "#products" },
-];
+  { label: editable("nav_facilities", "Facilities"), href: "#facilities", published: sectionPublished.facilities },
+  { label: editable("nav_equipment", "Equipment"), href: "#equipment", published: sectionPublished.equipment },
+  { label: editable("nav_products", "Products"), href: "#products", published: sectionPublished.products },
+].filter((item) => item.published);
+const primaryServiceHref = serviceLinks[0]?.href ?? (sectionPublished.about ? "#about" : "#home");
 
 const registryItems = (cms.registry ?? []).map((item) => ({
   title: item.title,
   note: item.subtitle ?? "",
   image: item.image ?? "",
 }));
-const SHOW_BUSINESS_REGISTRY = registryItems.length > 0;
+const SHOW_BUSINESS_REGISTRY = sectionPublished.registry && registryItems.length > 0;
 
 const cmsTeam = cms.team ?? [];
 const leaders = cmsTeam.filter((item) => item.description !== "BOARD").map((item) => ({
@@ -85,7 +98,53 @@ const owners: [string, string][] = cmsTeam
 const facilities = (cms.facility ?? []).map((item) => ({ name: item.title, image: item.image ?? "", detail: item.subtitle ?? "" }));
 const equipment = (cms.equipment ?? []).map((item) => ({ name: item.title, image: item.image ?? "", detail: item.subtitle ?? "" }));
 const projects = (cms.project ?? []).map((item) => ({ name: item.title, image: item.image ?? "", place: item.subtitle ?? "" }));
-const products = (cms.product ?? []).map((item) => ({ title: item.title, description: item.description ?? "" }));
+const products = (cms.product ?? []).map((item) => ({ title: item.title, description: item.description ?? item.subtitle ?? "" }));
+
+function MaintenanceScreen() {
+  const contactAddress = contentLines(editable("contact_address", "Purok Paho, Brgy. Felisa\nBacolod City, Negros Occidental\nPhilippines 6100"));
+  const contactTelephones = contentLines(editable("contact_telephones", "034-213-0490\n034-461-9194"));
+  const contactMobiles = contentLines(editable("contact_mobiles", "0998-476-2210\n0918-664-0085\n0936-923-3732"));
+  const contactEmail = editable("contact_email", "techtonicrmc@gmail.com");
+  const logoWidth = pixelSetting("header_logo_width", 252);
+
+  return (
+    <main className="maintenance-page">
+      <section className="maintenance-shell" aria-labelledby="maintenance-title">
+        <img
+          className="maintenance-logo"
+          src={editable("header_logo_image", "/images/techtonic-logo-white.png")}
+          alt="Techtonic Concrete Industries Inc."
+          style={{ width: `${logoWidth}px` }}
+        />
+        <div className="maintenance-copy">
+          <p className="eyebrow">Website Status</p>
+          <h1 id="maintenance-title">{editable("maintenance_heading", "Website Under Maintenance")}</h1>
+          <p>{editable("maintenance_message", "For urgent matters, contact us:")}</p>
+        </div>
+        <div className="maintenance-contact" aria-label="Contact details">
+          <div>
+            <span>{editable("contact_address_label", "Office Address")}</span>
+            <p>{contactAddress.map((line, index) => <span key={`${line}-${index}`}>{index > 0 && <br />}{line}</span>)}</p>
+          </div>
+          {contactTelephones.length > 0 && (
+            <div>
+              <span>{editable("contact_telephone_label", "Telephone")}</span>
+              <p>{contactTelephones.map((phone, index) => <span key={`${phone}-${index}`}>{index > 0 && <br />}<a href={phoneHref(phone)}>{phone}</a></span>)}</p>
+            </div>
+          )}
+          <div>
+            <span>{editable("contact_mobile_label", "Mobile")}</span>
+            <p>{contactMobiles.map((phone, index) => <span key={`${phone}-${index}`}>{index > 0 && <br />}<a href={phoneHref(phone)}>{phone}</a></span>)}</p>
+          </div>
+          <div>
+            <span>{editable("contact_email_label", "Email")}</span>
+            <p><a href={`mailto:${contactEmail}`}>{contactEmail}</a></p>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -101,6 +160,7 @@ export default function Home() {
   const contactEmail = editable("contact_email", "techtonicrmc@gmail.com");
   const headerLogoWidth = pixelSetting("header_logo_width", 252);
   const footerLogoWidth = pixelSetting("footer_logo_width", 205);
+  const maintenanceEnabled = editable("maintenance_enabled", "0") === "1";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -165,6 +225,10 @@ export default function Home() {
     setServicesOpen(false);
   };
 
+  if (maintenanceEnabled) {
+    return <MaintenanceScreen />;
+  }
+
   const submitInquiry = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSending(true);
@@ -217,13 +281,13 @@ export default function Home() {
           aria-label="Primary navigation"
         >
           <span className="mobile-menu-label">{editable("navigation_label", "Navigation")}</span>
-          <a href="#about" onClick={closeMenus}>{editable("nav_about", "About Us")}</a>
-          <a href="#mission" onClick={closeMenus}>{editable("nav_mission", "Mission & Vision")}</a>
+          {sectionPublished.about && <a href="#about" onClick={closeMenus}>{editable("nav_about", "About Us")}</a>}
+          {sectionPublished.mission && <a href="#mission" onClick={closeMenus}>{editable("nav_mission", "Mission & Vision")}</a>}
           {SHOW_BUSINESS_REGISTRY && (
             <a href="#registry" onClick={closeMenus}>{editable("nav_registry", "Business Registry")}</a>
           )}
-          <a href="#team" onClick={closeMenus}>{editable("nav_team", "Our Team")}</a>
-          <div className={`services-menu ${servicesOpen ? "is-open" : ""}`}>
+          {sectionPublished.team && <a href="#team" onClick={closeMenus}>{editable("nav_team", "Our Team")}</a>}
+          {serviceLinks.length > 0 && <div className={`services-menu ${servicesOpen ? "is-open" : ""}`}>
             <button
               type="button"
               aria-expanded={servicesOpen}
@@ -240,8 +304,8 @@ export default function Home() {
                 </a>
               ))}
             </div>
-          </div>
-          <a className="nav-contact" href="#contact" onClick={closeMenus}>{editable("nav_contact", "Contact Us")}</a>
+          </div>}
+          {sectionPublished.contact && <a className="nav-contact" href="#contact" onClick={closeMenus}>{editable("nav_contact", "Contact Us")}</a>}
         </nav>
       </header>
 
@@ -255,10 +319,10 @@ export default function Home() {
             {editable("hero_copy", "Reliable ready-mixed concrete, engineered for enduring projects across Bacolod City and Negros Occidental.")}
           </p>
           <div className="hero-actions">
-            <a className="button button-primary" href="#facilities">
+            <a className="button button-primary" href={primaryServiceHref}>
               {editable("hero_primary_button", "Explore Our Services")} <span aria-hidden="true">→</span>
             </a>
-            <a className="text-link" href="#about">{editable("hero_secondary_button", "View Company Profile")}</a>
+            {sectionPublished.about && <a className="text-link" href="#about">{editable("hero_secondary_button", "View Company Profile")}</a>}
           </div>
           <div className="trust-row" aria-label="Company strengths">
             <span>{editable("hero_trust_one", "Quality-Controlled")}</span>
@@ -266,13 +330,13 @@ export default function Home() {
             <span>{editable("hero_trust_three", "Built to Specification")}</span>
           </div>
         </div>
-        <a className="scroll-cue" href="#about" aria-label="Scroll to About Us">
+        <a className="scroll-cue" href={sectionPublished.about ? "#about" : primaryServiceHref} aria-label="Scroll to next section">
           <span>{editable("hero_scroll_label", "Discover")}</span>
           <i aria-hidden="true" />
         </a>
       </section>
 
-      <section className="about-section" id="about">
+      {sectionPublished.about && <section className="about-section" id="about">
         <div className="section-heading">
           <p className="eyebrow">{editable("about_eyebrow", "About Techtonic")}</p>
           <h2>{headingLines(editable("about_heading", "Concrete confidence,\nfrom the ground up."))}</h2>
@@ -290,9 +354,9 @@ export default function Home() {
             <div><strong>{editable("about_stat_three_value", "2020")}</strong><span>{editable("about_stat_three_label", "year established")}</span></div>
           </div>
         </div>
-      </section>
+      </section>}
 
-      <section className="mission-section" id="mission">
+      {sectionPublished.mission && <section className="mission-section" id="mission">
         <div className="mission-intro">
           <p className="eyebrow">{editable("mission_eyebrow", "Mission & Vision")}</p>
           <h2>{headingLines(editable("mission_heading", "Measured by quality.\nDriven by service."))}</h2>
@@ -316,7 +380,7 @@ export default function Home() {
             </p>
           </article>
         </div>
-      </section>
+      </section>}
 
       {SHOW_BUSINESS_REGISTRY && (
         <section className="registry-section" id="registry">
@@ -351,7 +415,7 @@ export default function Home() {
         </section>
       )}
 
-      <section className="team-section" id="team">
+      {sectionPublished.team && <section className="team-section" id="team">
         <div className="section-topline">
           <div>
             <p className="eyebrow">{editable("team_eyebrow", "Our Team")}</p>
@@ -393,9 +457,9 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
-      <section className="showcase-section facilities-section" id="facilities">
+      {sectionPublished.facilities && <section className="showcase-section facilities-section" id="facilities">
         <div className="section-topline">
           <div>
             <p className="eyebrow">{editable("facilities_eyebrow", "Our Facilities")}</p>
@@ -422,9 +486,9 @@ export default function Home() {
             </article>
           ))}
         </div>
-      </section>
+      </section>}
 
-      <section className="equipment-section" id="equipment">
+      {sectionPublished.equipment && <section className="equipment-section" id="equipment">
         <div className="section-topline light">
           <div>
             <p className="eyebrow">{editable("equipment_eyebrow", "Our Equipment")}</p>
@@ -451,9 +515,9 @@ export default function Home() {
             </article>
           ))}
         </div>
-      </section>
+      </section>}
 
-      <section className="products-section" id="products">
+      {sectionPublished.products && <section className="products-section" id="products">
         <div className="products-heading">
           <p className="eyebrow">{editable("products_eyebrow", "Our Products")}</p>
           <h2>{headingLines(editable("products_heading", "Concrete designed around the demands of the job."))}</h2>
@@ -469,12 +533,12 @@ export default function Home() {
             </article>
           ))}
         </div>
-        <a className="button button-primary product-cta" href="#contact">
+        {sectionPublished.contact && <a className="button button-primary product-cta" href="#contact">
           {editable("products_button_label", "Discuss Your Requirements")} <span aria-hidden="true">→</span>
-        </a>
-      </section>
+        </a>}
+      </section>}
 
-      <section className="projects-section" aria-labelledby="projects-title">
+      {sectionPublished.projects && <section className="projects-section" id="projects" aria-labelledby="projects-title">
         <div className="section-topline">
           <div>
             <p className="eyebrow">{editable("projects_eyebrow", "Selected Projects")}</p>
@@ -500,9 +564,9 @@ export default function Home() {
             </article>
           ))}
         </div>
-      </section>
+      </section>}
 
-      <section className="contact-section" id="contact">
+      {sectionPublished.contact && <section className="contact-section" id="contact">
         <div className="contact-main">
           <p className="eyebrow">{editable("contact_eyebrow", "Contact Us")}</p>
           <h2>{headingLines(editable("contact_heading", "Let's build something\nthat lasts."))}</h2>
@@ -518,10 +582,12 @@ export default function Home() {
             <span>{editable("contact_address_label", "Office Address")}</span>
             <p>{contactAddress.map((line, index) => <span key={`${line}-${index}`}>{index > 0 && <br />}{line}</span>)}</p>
           </div>
-          <div>
-            <span>{editable("contact_telephone_label", "Telephone")}</span>
-            <p>{contactTelephones.map((phone, index) => <span key={`${phone}-${index}`}>{index > 0 && <br />}<a href={phoneHref(phone)}>{phone}</a></span>)}</p>
-          </div>
+          {contactTelephones.length > 0 && (
+            <div>
+              <span>{editable("contact_telephone_label", "Telephone")}</span>
+              <p>{contactTelephones.map((phone, index) => <span key={`${phone}-${index}`}>{index > 0 && <br />}<a href={phoneHref(phone)}>{phone}</a></span>)}</p>
+            </div>
+          )}
           <div>
             <span>{editable("contact_mobile_label", "Mobile")}</span>
             <p>{contactMobiles.map((phone, index) => <span key={`${phone}-${index}`}>{index > 0 && <br />}<a href={phoneHref(phone)}>{phone}</a></span>)}</p>
@@ -531,9 +597,9 @@ export default function Home() {
             <p><a href={`mailto:${contactEmail}`}>{contactEmail}</a></p>
           </div>
         </div>
-      </section>
+      </section>}
 
-      {inquiryOpen && (
+      {sectionPublished.contact && inquiryOpen && (
         <div className="inquiry-modal" role="dialog" aria-modal="true" aria-labelledby="inquiry-title">
           <button className="inquiry-backdrop" type="button" aria-label="Close inquiry form" onClick={() => setInquiryOpen(false)} />
           <div className="inquiry-panel">
@@ -594,14 +660,14 @@ export default function Home() {
         <div className="footer-links">
           <h2>{editable("footer_links_heading", "Quick Links")}</h2>
           <nav aria-label="Footer navigation">
-            <a href="#about">{editable("nav_about", "About Us")}</a>
-            <a href="#mission">{editable("nav_mission", "Mission & Vision")}</a>
+            {sectionPublished.about && <a href="#about">{editable("nav_about", "About Us")}</a>}
+            {sectionPublished.mission && <a href="#mission">{editable("nav_mission", "Mission & Vision")}</a>}
             {SHOW_BUSINESS_REGISTRY && <a href="#registry">{editable("nav_registry", "Business Registry")}</a>}
-            <a href="#team">{editable("nav_team", "Our Team")}</a>
-            <a href="#facilities">{editable("nav_facilities", "Facilities")}</a>
-            <a href="#equipment">{editable("nav_equipment", "Equipment")}</a>
-            <a href="#products">{editable("nav_products", "Products")}</a>
-            <a href="#contact">{editable("nav_contact", "Contact Us")}</a>
+            {sectionPublished.team && <a href="#team">{editable("nav_team", "Our Team")}</a>}
+            {sectionPublished.facilities && <a href="#facilities">{editable("nav_facilities", "Facilities")}</a>}
+            {sectionPublished.equipment && <a href="#equipment">{editable("nav_equipment", "Equipment")}</a>}
+            {sectionPublished.products && <a href="#products">{editable("nav_products", "Products")}</a>}
+            {sectionPublished.contact && <a href="#contact">{editable("nav_contact", "Contact Us")}</a>}
           </nav>
         </div>
 

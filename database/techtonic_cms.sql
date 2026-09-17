@@ -10,11 +10,31 @@ CREATE TABLE IF NOT EXISTS `users` (
   `email_verified_at` timestamp NULL,
   `password` varchar(255) NOT NULL,
   `is_admin` tinyint(1) NOT NULL DEFAULT 0,
+  `role` varchar(255) NOT NULL DEFAULT 'editor',
+  `profile_photo_path` varchar(255) NULL,
+  `contact_number` varchar(255) NULL,
   `remember_token` varchar(100) NULL,
   `created_at` timestamp NULL,
   `updated_at` timestamp NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `activity_logs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint unsigned NULL,
+  `action` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `subject_type` varchar(255) NULL,
+  `subject_id` bigint unsigned NULL,
+  `ip_address` varchar(45) NULL,
+  `user_agent` text NULL,
+  `created_at` timestamp NULL,
+  `updated_at` timestamp NULL,
+  PRIMARY KEY (`id`),
+  KEY `activity_logs_user_id_foreign` (`user_id`),
+  KEY `activity_logs_subject_type_subject_id_index` (`subject_type`, `subject_id`),
+  CONSTRAINT `activity_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `content_items` (

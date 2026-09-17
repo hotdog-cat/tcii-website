@@ -158,6 +158,104 @@ body {
   font-family: var(--font-sans);
 }
 
+.maintenance-page {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: clamp(28px, 7vw, 96px);
+  background:
+    linear-gradient(120deg, rgba(5, 8, 10, 0.98), rgba(5, 8, 10, 0.82)),
+    url("/images/hero-night.webp") center / cover no-repeat;
+}
+
+.maintenance-shell {
+  position: relative;
+  width: min(1080px, 100%);
+  display: grid;
+  gap: clamp(34px, 5vw, 64px);
+  padding-top: 22px;
+  animation: fadeUp 700ms 80ms both;
+}
+
+.maintenance-shell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(180px, 42vw);
+  height: 3px;
+  background: linear-gradient(90deg, var(--cyan-bright), rgba(24, 195, 231, 0));
+}
+
+.maintenance-logo {
+  display: block;
+  max-width: min(100%, 320px);
+  height: auto;
+}
+
+.maintenance-copy {
+  max-width: 760px;
+}
+
+.maintenance-copy h1 {
+  margin: 0;
+  color: white;
+  font-size: clamp(44px, 7vw, 92px);
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+  font-weight: 700;
+}
+
+.maintenance-copy > p:not(.eyebrow) {
+  max-width: 620px;
+  margin: 26px 0 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.55;
+}
+
+.maintenance-contact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 2px solid var(--cyan);
+  box-shadow: 0 28px 90px rgba(8, 169, 208, 0.12);
+}
+
+.maintenance-contact > div {
+  min-height: 170px;
+  padding: 24px;
+  background: rgba(17, 23, 27, 0.88);
+  box-shadow: inset 0 1px 0 rgba(24, 195, 231, 0.08);
+}
+
+.maintenance-contact span {
+  display: block;
+}
+
+.maintenance-contact > div > span {
+  margin-bottom: 18px;
+  color: var(--cyan-bright);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.maintenance-contact p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.maintenance-contact a:hover,
+.maintenance-contact a:focus-visible {
+  color: var(--cyan-bright);
+}
+
 button,
 input,
 select,
@@ -1794,7 +1892,8 @@ footer {
   }
 
   .about-stats,
-  .contact-details {
+  .contact-details,
+  .maintenance-contact {
     grid-template-columns: 1fr;
   }
 

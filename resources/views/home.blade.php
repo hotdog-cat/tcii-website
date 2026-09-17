@@ -87,7 +87,7 @@
 
     <section class="products-section" id="products">
         <div class="products-heading"><p class="eyebrow">Our Products</p><h2>Concrete designed around the demands of the job.</h2></div>
-        <div><div class="product-list">@foreach($products as $item)<article><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><div><h3>{{ $item->title }}</h3><p>{{ $item->description }}</p></div></article>@endforeach</div><a class="button button-primary product-cta" href="#contact">Discuss Your Requirements <span>→</span></a></div>
+        <div><div class="product-list">@foreach($products as $item)<article><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><div><h3>{{ $item->title }}</h3><p>{{ $item->description ?? $item->subtitle }}</p></div></article>@endforeach</div><a class="button button-primary product-cta" href="#contact">Discuss Your Requirements <span>→</span></a></div>
     </section>
 
     <section class="projects-section" aria-labelledby="projects-title">

@@ -14,7 +14,13 @@ class DatabaseSeeder extends Seeder
     {
         User::updateOrCreate(
             ['email' => 'admin@company.com'],
-            ['name' => 'Company Administrator', 'password' => Hash::make('password'), 'is_admin' => true]
+            [
+                'name' => 'Company Administrator',
+                'password' => Hash::make('password'),
+                'is_admin' => true,
+                'role' => User::ROLE_ADMIN,
+                'contact_number' => 'Not set',
+            ]
         );
 
         foreach (PageContent::DEFAULTS as $key => $value) {

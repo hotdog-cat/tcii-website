@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\ContentItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ItemController extends Controller
@@ -24,15 +24,24 @@ class ItemController extends Controller
 
     public function create(Request $request): View
     {
-        $item = new ContentItem(['type' => $request->string('type')->toString(), 'is_published' => true]);
+        $type = $request->string('type')->toString();
+        abort_unless(array_key_exists($type, ContentItem::TYPES), 404);
+
+        $item = new ContentItem(['type' => $type, 'is_published' => true]);
         return view('admin.items.form', compact('item'));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $this->validated($request);
+        $type = $request->query('type');
+        abort_unless(is_string($type) && array_key_exists($type, ContentItem::TYPES), 404);
+
+        $data = $this->validated($request, $type);
+        $data['type'] = $type;
         if ($request->hasFile('image')) $data['image_path'] = $request->file('image')->store('content', 'public');
-        ContentItem::create($data);
+        $item = ContentItem::create($data);
+        ActivityLog::record('content.created', "Created {$item->title}.", $item);
+
         return redirect()->route('admin.items.index', ['type' => $data['type']])->with('success', 'Content item created.');
     }
 
@@ -50,27 +59,48 @@ class ItemController extends Controller
             return redirect()->route('admin.items.edit', $item)->with('success', 'Image removed.');
         }
 
-        $data = $this->validated($request);
+        $data = $this->validated($request, $item->type);
+        $data['type'] = $item->type;
         if ($request->hasFile('image')) {
             $this->deleteStoredImage($item);
             $data['image_path'] = $request->file('image')->store('content', 'public');
         }
         $item->update($data);
+        ActivityLog::record('content.updated', "Updated {$item->title}.", $item);
+
         return redirect()->route('admin.items.index', ['type' => $data['type']])->with('success', 'Content item updated.');
+    }
+
+    public function publication(Request $request, ContentItem $item): RedirectResponse
+    {
+        $data = $request->validate([
+            'is_published' => ['required', 'boolean'],
+        ]);
+
+        $item->update(['is_published' => (bool) $data['is_published']]);
+        ActivityLog::record('content.publication', ($item->is_published ? 'Published ' : 'Saved draft for ').$item->title.'.', $item);
+
+        return redirect()
+            ->route('admin.items.index', ['type' => $item->type])
+            ->with('success', $item->is_published ? 'Content item published.' : 'Content item saved as draft.');
     }
 
     public function destroy(ContentItem $item): RedirectResponse
     {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
         $this->deleteStoredImage($item);
         $type = $item->type;
+        $title = $item->title;
         $item->delete();
+        ActivityLog::record('content.deleted', "Deleted {$title}.");
+
         return redirect()->route('admin.items.index', ['type' => $type])->with('success', 'Content item deleted.');
     }
 
-    private function validated(Request $request): array
+    private function validated(Request $request, string $type): array
     {
         $data = $request->validate([
-            'type' => ['required', Rule::in(array_keys(ContentItem::TYPES))],
             'title' => ['required', 'string', 'max:190'],
             'subtitle' => ['nullable', 'string', 'max:190'],
             'description' => ['nullable', 'string', 'max:3000'],
@@ -79,6 +109,9 @@ class ItemController extends Controller
             'is_published' => ['nullable', 'boolean'],
         ]);
         $data['is_published'] = $request->boolean('is_published');
+        if (! in_array($type, ['product', 'team'], true)) {
+            $data['description'] = null;
+        }
         unset($data['image']);
         return $data;
     }

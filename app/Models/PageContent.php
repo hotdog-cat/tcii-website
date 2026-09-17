@@ -6,12 +6,27 @@ use Illuminate\Database\Eloquent\Model;
 
 class PageContent extends Model
 {
+    public const SECTION_VISIBILITY = [
+        'about' => 'About Techtonic',
+        'mission' => 'Mission & Vision',
+        'registry' => 'Business Registry',
+        'team' => 'Team',
+        'facilities' => 'Facilities',
+        'equipment' => 'Equipment',
+        'products' => 'Products',
+        'projects' => 'Projects',
+        'contact' => 'Contact Details',
+    ];
+
     public const DEFAULTS = [
         'hero_background_image' => '/images/hero-night.webp',
         'header_logo_image' => '/images/techtonic-logo-white.png',
         'footer_logo_image' => '/images/techtonic-logo-white.png',
         'header_logo_width' => '252',
         'footer_logo_width' => '205',
+        'maintenance_enabled' => '0',
+        'maintenance_heading' => 'Website Under Maintenance',
+        'maintenance_message' => 'For urgent matters, contact us:',
         'navigation_label' => 'Navigation',
         'nav_about' => 'About Us',
         'nav_mission' => 'Mission & Vision',
@@ -98,6 +113,15 @@ class PageContent extends Model
         'footer_contact_heading' => 'Get in Touch',
         'footer_company_name' => 'Techtonic Concrete Industries Inc.',
         'footer_back_to_top' => 'Back to top',
+        'section_about_published' => '1',
+        'section_mission_published' => '1',
+        'section_registry_published' => '1',
+        'section_team_published' => '1',
+        'section_facilities_published' => '1',
+        'section_equipment_published' => '1',
+        'section_products_published' => '1',
+        'section_projects_published' => '1',
+        'section_contact_published' => '1',
     ];
 
     protected $fillable = ['key', 'value'];

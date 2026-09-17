@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\PageContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,16 +31,23 @@ class PageContentController extends Controller
             $this->deleteStoredMedia($currentValue);
 
             PageContent::updateOrCreate(['key' => $key], ['value' => PageContent::DEFAULTS[$key]]);
+            ActivityLog::record('page.media_removed', "Removed {$key} and restored the default.");
 
             return back()->with('success', 'Image removed and default restored.');
         }
 
         $rules = [];
-        $longFieldFragments = ['paragraph', 'description', 'intro', 'copy', 'address', 'telephones', 'mobiles'];
+        $longFieldFragments = ['paragraph', 'description', 'intro', 'copy', 'address', 'telephones', 'mobiles', 'maintenance_message'];
+        $nullableContentKeys = ['contact_telephones'];
 
         foreach (PageContent::DEFAULTS as $key => $default) {
+            if (str_starts_with($key, 'section_') || $key === 'maintenance_enabled') {
+                $rules[$key] = ['required', 'boolean'];
+                continue;
+            }
+
             $isLongField = collect($longFieldFragments)->contains(fn (string $fragment) => str_contains($key, $fragment));
-            $rules[$key] = ['required', 'string', $isLongField
+            $rules[$key] = [in_array($key, $nullableContentKeys, true) ? 'nullable' : 'required', 'string', $isLongField
                 ? 'max:3000'
                 : 'max:190'];
         }
@@ -53,6 +61,9 @@ class PageContentController extends Controller
 
         $validated = $request->validate($rules);
         $contentValues = array_intersect_key($validated, PageContent::DEFAULTS);
+        foreach ($nullableContentKeys as $key) {
+            $contentValues[$key] = $contentValues[$key] ?? '';
+        }
 
         foreach ([
             'hero_background_upload' => 'hero_background_image',
@@ -71,6 +82,8 @@ class PageContentController extends Controller
                 PageContent::updateOrCreate(['key' => $key], ['value' => $value]);
             }
         });
+
+        ActivityLog::record('page.updated', 'Updated page content and media settings.');
 
         return back()->with('success', 'Page content updated.');
     }

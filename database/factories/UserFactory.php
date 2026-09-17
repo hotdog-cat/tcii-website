@@ -19,6 +19,8 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'is_admin' => false,
+            'role' => 'editor',
+            'contact_number' => fake()->phoneNumber(),
         ];
     }
 }

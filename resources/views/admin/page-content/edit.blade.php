@@ -2,8 +2,9 @@
 @section('title', 'Page Content')
 @section('content')
 @php
-    $activeTab = in_array(request('tab'), ['text', 'banner', 'header-logo', 'footer-logo'], true) ? request('tab') : 'text';
+    $activeTab = in_array(request('tab'), ['text', 'maintenance', 'banner', 'header-logo', 'footer-logo'], true) ? request('tab') : 'text';
     $field = fn (string $name, string $label, string $type = 'input', ?string $hint = null) => compact('name', 'label', 'type', 'hint');
+    $optionalFields = ['contact_telephones'];
     $sections = [
         ['id' => 'navigation', 'title' => 'Navigation', 'fields' => [
             $field('navigation_label', 'Mobile menu label'), $field('nav_about', 'About link'),
@@ -100,7 +101,7 @@
 </div>
 
 <div class="content-tabs" role="tablist" aria-label="Page content settings">
-    @foreach(['text' => 'Page Text', 'banner' => 'Home Banner', 'header-logo' => 'Header Logo', 'footer-logo' => 'Footer Logo'] as $tab => $label)
+    @foreach(['text' => 'Page Text', 'maintenance' => 'Maintenance', 'banner' => 'Home Banner', 'header-logo' => 'Header Logo', 'footer-logo' => 'Footer Logo'] as $tab => $label)
         <button @class(['active' => $activeTab === $tab]) type="button" role="tab" aria-selected="{{ $activeTab === $tab ? 'true' : 'false' }}" data-content-tab="{{ $tab }}">{{ $label }}</button>
     @endforeach
 </div>
@@ -115,10 +116,24 @@
         </nav>
 
         @foreach($sections as $index => $section)
+            @php
+                $visibilityKey = 'section_'.$section['id'].'_published';
+            @endphp
             <section class="panel form-panel content-section-panel" id="{{ $section['id'] }}">
                 <div class="panel-title">
                     <div><p class="kicker">Section {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</p><h2>{{ $section['title'] }}</h2></div>
-                    <span class="fixed-layout-note">Content only &middot; Layout is fixed</span>
+                    <div class="section-panel-actions">
+                        @if(array_key_exists($section['id'], \App\Models\PageContent::SECTION_VISIBILITY))
+                            <label>
+                                <span class="sr-only">{{ $section['title'] }} publication status</span>
+                                <select name="{{ $visibilityKey }}">
+                                    <option value="1" @selected(old($visibilityKey, $content[$visibilityKey]) === '1')>Published</option>
+                                    <option value="0" @selected(old($visibilityKey, $content[$visibilityKey]) === '0')>Draft</option>
+                                </select>
+                            </label>
+                        @endif
+                        <span class="fixed-layout-note">Content only &middot; Layout is fixed</span>
+                    </div>
                 </div>
                 <div class="form-grid">
                     @foreach($section['fields'] as $item)
@@ -126,13 +141,14 @@
                             $isTextarea = in_array($item['type'], ['textarea', 'long'], true);
                             $isWide = $isTextarea || $item['name'] === 'contact_address';
                             $maxLength = $item['type'] === 'long' ? 3000 : 190;
+                            $isRequired = ! in_array($item['name'], $optionalFields, true);
                         @endphp
                         <label @class(['wide' => $isWide])>
                             {{ $item['label'] }}
                             @if($isTextarea)
-                                <textarea name="{{ $item['name'] }}" rows="{{ $item['type'] === 'long' ? 4 : 2 }}" maxlength="{{ $maxLength }}" required>{{ old($item['name'], $content[$item['name']]) }}</textarea>
+                                <textarea name="{{ $item['name'] }}" rows="{{ $item['type'] === 'long' ? 4 : 2 }}" maxlength="{{ $maxLength }}" @required($isRequired)>{{ old($item['name'], $content[$item['name']]) }}</textarea>
                             @else
-                                <input type="{{ $item['type'] === 'email' ? 'email' : 'text' }}" name="{{ $item['name'] }}" maxlength="{{ $maxLength }}" value="{{ old($item['name'], $content[$item['name']]) }}" required>
+                                <input type="{{ $item['type'] === 'email' ? 'email' : 'text' }}" name="{{ $item['name'] }}" maxlength="{{ $maxLength }}" value="{{ old($item['name'], $content[$item['name']]) }}" @required($isRequired)>
                             @endif
                             @if($item['hint'])<small>{{ $item['hint'] }}</small>@endif
                         </label>
@@ -140,6 +156,49 @@
                 </div>
             </section>
         @endforeach
+    </div>
+
+    <div @class(['content-tab-panel', 'active' => $activeTab === 'maintenance']) role="tabpanel" data-content-panel="maintenance" @if($activeTab !== 'maintenance') hidden @endif>
+        <section class="panel maintenance-settings-panel">
+            <div class="panel-title">
+                <div>
+                    <p class="kicker">Website Availability</p>
+                    <h2>Maintenance Mode</h2>
+                </div>
+            </div>
+            <div class="maintenance-settings-grid">
+                <div class="maintenance-settings-copy">
+                    <label>
+                        Public website status
+                        <select name="maintenance_enabled">
+                            <option value="0" @selected(old('maintenance_enabled', $content['maintenance_enabled']) === '0')>Live</option>
+                            <option value="1" @selected(old('maintenance_enabled', $content['maintenance_enabled']) === '1')>Under Maintenance</option>
+                        </select>
+                        <small>Admin pages remain available so maintenance mode can be turned off anytime.</small>
+                    </label>
+                    <label>
+                        Maintenance heading
+                        <input type="text" name="maintenance_heading" maxlength="190" value="{{ old('maintenance_heading', $content['maintenance_heading']) }}" required>
+                    </label>
+                    <label>
+                        Urgent matters message
+                        <textarea name="maintenance_message" rows="3" maxlength="3000" required>{{ old('maintenance_message', $content['maintenance_message']) }}</textarea>
+                        <small>The saved contact details below will be shown automatically.</small>
+                    </label>
+                </div>
+                <div class="maintenance-preview">
+                    <img src="{{ $content['header_logo_image'] }}" alt="Current website logo">
+                    <h3>{{ old('maintenance_heading', $content['maintenance_heading']) }}</h3>
+                    <p>{{ old('maintenance_message', $content['maintenance_message']) }}</p>
+                    <dl>
+                        <div><dt>{{ $content['contact_address_label'] }}</dt><dd>{!! nl2br(e($content['contact_address'])) !!}</dd></div>
+                        @if(trim($content['contact_telephones']) !== '')<div><dt>{{ $content['contact_telephone_label'] }}</dt><dd>{!! nl2br(e($content['contact_telephones'])) !!}</dd></div>@endif
+                        <div><dt>{{ $content['contact_mobile_label'] }}</dt><dd>{!! nl2br(e($content['contact_mobiles'])) !!}</dd></div>
+                        <div><dt>{{ $content['contact_email_label'] }}</dt><dd>{{ $content['contact_email'] }}</dd></div>
+                    </dl>
+                </div>
+            </div>
+        </section>
     </div>
 
     @foreach([
