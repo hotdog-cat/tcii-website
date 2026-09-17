@@ -295,7 +295,7 @@ a {
 
 .hero-media {
   z-index: -3;
-  background: #0c1820 url("/images/hero-night.webp") center 58% / cover no-repeat;
+  background: #0c1820 center 58% / cover no-repeat;
   transform: scale(1.03);
   animation: heroReveal 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }

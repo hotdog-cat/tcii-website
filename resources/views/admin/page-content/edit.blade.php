@@ -210,7 +210,13 @@
             <section class="panel media-settings-panel">
                 <div class="panel-title"><div><p class="kicker">Website Media</p><h2>{{ $media['title'] }}</h2></div></div>
                 <div class="media-settings-grid">
-                    <div class="media-preview {{ $media['class'] }}"><img src="{{ $content[$media['key']] }}" alt="Current {{ strtolower($media['title']) }}"></div>
+                    <div class="media-preview {{ $media['class'] }}">
+                        @if($content[$media['key']])
+                            <img src="{{ $content[$media['key']] }}" alt="Current {{ strtolower($media['title']) }}">
+                        @else
+                            <span>No image set</span>
+                        @endif
+                    </div>
                     <div class="media-upload-copy">
                         <h3>Replace {{ $media['title'] }}</h3>
                         <p>{{ $media['description'] }}</p>
@@ -222,7 +228,7 @@
                             name="remove_media"
                             value="{{ $media['key'] }}"
                             formnovalidate
-                            onclick="return confirm('Remove this image and restore the default?')"
+                            onclick="return confirm('Remove this image?')"
                         >Remove Image</button>
                         @if($media['size_key'])
                             <div class="logo-size-control" data-logo-size-control>

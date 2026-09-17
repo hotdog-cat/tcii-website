@@ -58,6 +58,7 @@ const headingLines = (value: string) =>
   ));
 const contentLines = (value: string) => value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 const phoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+const heroBackgroundImage = editable("hero_background_image", "").trim();
 const isSectionPublished = (section: string) => editable(`section_${section}_published`, "1") !== "0";
 const sectionPublished = {
   about: isSectionPublished("about"),
@@ -310,7 +311,11 @@ export default function Home() {
       </header>
 
       <section className="hero" id="home">
-        <div className="hero-media" style={{ backgroundImage: `url(${editable("hero_background_image", "/images/hero-night.webp")})` }} aria-hidden="true" />
+        <div
+          className="hero-media"
+          style={heroBackgroundImage ? { backgroundImage: `url(${heroBackgroundImage})` } : undefined}
+          aria-hidden="true"
+        />
         <div className="hero-shade" aria-hidden="true" />
         <div className="hero-content">
           <p className="eyebrow">{editable("hero_eyebrow", "Built for what comes next")}</p>

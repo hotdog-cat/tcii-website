@@ -19,7 +19,7 @@ class PageContent extends Model
     ];
 
     public const DEFAULTS = [
-        'hero_background_image' => '/images/hero-night.webp',
+        'hero_background_image' => '',
         'header_logo_image' => '/images/techtonic-logo-white.png',
         'footer_logo_image' => '/images/techtonic-logo-white.png',
         'header_logo_width' => '252',
@@ -132,9 +132,15 @@ class PageContent extends Model
             return self::DEFAULTS;
         }
 
-        return array_replace(
+        $values = array_replace(
             self::DEFAULTS,
             static::query()->whereIn('key', array_keys(self::DEFAULTS))->pluck('value', 'key')->all()
         );
+
+        if (($values['hero_background_image'] ?? '') === '/images/hero-night.webp') {
+            $values['hero_background_image'] = '';
+        }
+
+        return $values;
     }
 }

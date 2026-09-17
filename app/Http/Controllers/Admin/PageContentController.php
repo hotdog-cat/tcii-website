@@ -33,12 +33,12 @@ class PageContentController extends Controller
             PageContent::updateOrCreate(['key' => $key], ['value' => PageContent::DEFAULTS[$key]]);
             ActivityLog::record('page.media_removed', "Removed {$key} and restored the default.");
 
-            return back()->with('success', 'Image removed and default restored.');
+            return back()->with('success', 'Image removed.');
         }
 
         $rules = [];
         $longFieldFragments = ['paragraph', 'description', 'intro', 'copy', 'address', 'telephones', 'mobiles', 'maintenance_message'];
-        $nullableContentKeys = ['contact_telephones'];
+        $nullableContentKeys = ['hero_background_image', 'contact_telephones'];
 
         foreach (PageContent::DEFAULTS as $key => $default) {
             if (str_starts_with($key, 'section_') || $key === 'maintenance_enabled') {
