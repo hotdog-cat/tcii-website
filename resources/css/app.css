@@ -1286,8 +1286,8 @@ a {
   grid-template-columns: 1.1fr 0.9fr;
   min-height: 760px;
   background:
-    linear-gradient(90deg, rgba(5, 8, 10, 0.96), rgba(5, 8, 10, 0.68)),
-    url("/images/hero-night.webp") center / cover no-repeat;
+    radial-gradient(circle at 10% 18%, rgba(8, 169, 208, 0.08), transparent 30%),
+    #0d1114;
 }
 
 .contact-main,
